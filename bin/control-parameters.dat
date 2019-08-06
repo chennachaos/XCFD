@@ -1,12 +1,12 @@
 density           1.0
-viscosity         0.01
+viscosity         0.001
 bodyforce         0.0 0.0 0.0
 beta              0.9
 gamma1            1.5
 gamma2            1.5
 CFL               0.9
-dt                0.00005
+dt                0.005
 FinalTime         50000.0
-MaximumSteps      1000
+MaximumSteps      100000
 OutputFrequency   100
-tolerance         0.000001
+tolerance         0.00001

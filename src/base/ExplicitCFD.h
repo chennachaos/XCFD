@@ -6,14 +6,12 @@
 #include <string.h>
 #include <vector>
 #include <fstream>
-//#include "Eigen/Core"
 #include "ElementBase.h"
 
 
 using std::vector;
 using std::cout;
 using std::string;
-using std::ofstream;
 
 class ElementBase;
 
@@ -48,6 +46,9 @@ class ExplicitCFD
         int  nNode, nNode_Velo, nNode_Pres, nDBC, nDBC_Velo, nDBC_Pres, nFBC, nOutputFaceLoads;
         int  npElem, npElemVelo, npElemPres;
         int  stepsMax, outputFreq;
+
+        std::string  infilename;
+        std::ofstream  fout_convdata;
 
         double  conv_tol, rhoInf, am, gamm1, gamm2, CFL, timeFinal,  dt;
         double  elemData[50], timeData[50];
@@ -85,8 +86,6 @@ class ExplicitCFD
         VectorXd  rhsVecVelo, rhsVecVelo2, rhsVecPres, rhsVecPres2;
         VectorXd  veloM, veloMp1, veloDotM, veloDotMp1;
         VectorXd  presM, presMp1, presDotM, presDotMp1;
-
-        ofstream  fout_convdata;
 
     public:
 
@@ -126,7 +125,7 @@ class ExplicitCFD
 
         void  readInputData(string& fname);
 
-        void  readControlParameters(string& fname);
+        void  readControlParameters();
 
         void  plotGeom(int, bool, int, bool, int*);
 

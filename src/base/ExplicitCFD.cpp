@@ -4,7 +4,6 @@
 #include "ExplicitCFD.h"
 #include "KimMoinFlow.h"
 #include "elementutilitiescfd.h"
-//#include "SolutionData.h"
 #include "BernsteinElem2DINSTria6Node.h"
 #include "BernsteinElem2DINSQuad9Node.h"
 #include "BernsteinElem3DINSTetra10Node.h"
@@ -54,7 +53,9 @@ void  ExplicitCFD::readInputData(string&  fname)
 {
     cout << " Reading input data \n\n " << endl;
 
-    std::ifstream  infile(fname);
+    infilename = fname;
+
+    std::ifstream  infile( string(infilename+".dat") );
 
     if(infile.fail())
     {
@@ -577,7 +578,7 @@ void ExplicitCFD::prepareInputData()
 }
 
 
-void ExplicitCFD::readControlParameters(string& fname)
+void ExplicitCFD::readControlParameters()
 {
     cout << " ExplicitCFD::readControlParameters " << endl;
 
@@ -738,7 +739,7 @@ void ExplicitCFD::writeNodalData()
 }
 
 
-/*
+
 int  ExplicitCFD::solveExplicitStep()
 {
     calcMassMatrixForExplicitDynamics();
@@ -765,21 +766,21 @@ int  ExplicitCFD::solveExplicitStep()
     double  dtgamma11, dtgamma12, norm_velo_diff, norm_pres_diff;
     double  Re=2.0/elemData[1];
 
-    cout << " Re = " << Re << endl;
+    //cout << " Re = " << Re << endl;
 
     VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
     VectorXd  TotalForce(3);
 
-    double  timeNow=0.0, timeFact=0.0, dt=0.0;
+    double  timeNow=0.0, timeFact=0.0;
 
-    //auto time1 = chrono::steady_clock::now();
-    //auto duration=0.0;
+    auto time1 = chrono::steady_clock::now();
+    auto duration=0.0;
 
     //setInitialConditions();
 
     //Time loop
-    //while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
-    //{
+    while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
+    {
         auto time1 = chrono::steady_clock::now();
 
         if(stepsCompleted < 5000)
@@ -793,22 +794,8 @@ int  ExplicitCFD::solveExplicitStep()
         }
         //timeFact = 1.0;
 
-        auto time2 = chrono::steady_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for time factor = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
         rhsVecVelo.setZero();
         rhsVecPres.setZero();
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for zeroing = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
 
         //Loop over elements and compute the RHS and time step
         fact = timeNow - dt;
@@ -834,14 +821,8 @@ int  ExplicitCFD::solveExplicitStep()
         dt = dtCrit*CFL/gamm1;
         //cout << " dt = " << dt << endl;
 
-        //auto time2 = chrono::steady_clock::now();
-        //duration += chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for element loop = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
+        //printVector(rhsVecVelo);
+        //printVector(rhsVecPres);
 
         // Add specified nodal force 
         //addExternalForces(timeFact);
@@ -866,76 +847,41 @@ int  ExplicitCFD::solveExplicitStep()
           pres(jj)    = presPrev(jj) + dtgamma11*presDot(jj) + dtgamma12*presDotPrev(jj);
         }
 
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for solution = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
         // apply boundary conditions
         applyBoundaryConditions(timeFact);
 
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for BCs = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
         // compute norms
-        if(stepsCompleted == 10)
+
+        norm_velo = velo.norm();
+        norm_pres = pres.norm();
+
+        if( std::isnan(norm_velo) || std::isnan(norm_pres) )
+        {
+          cerr << " NAN encountered in the solution ... " << endl;
+          cerr << " Program has been terminated ... " << endl;
+          exit(-1);
+        }
+
+        veloDiff = velo - veloPrev;
+        norm_velo_diff = veloDiff.norm();
+        norm_velo = norm_velo_diff/norm_velo;
+
+        presDiff  = pres - presPrev;
+        norm_pres_diff = presDiff.norm();
+        norm_pres = norm_pres_diff/norm_pres;
+
+        if(stepsCompleted == 0)
         {
           norm_velo = 1.0;
-        }
-        else
-        {
-          norm_velo = velo.norm();
-
-          if( std::isnan(norm_velo) || std::isinf(norm_velo) )
-          {
-            cerr << " NAN encountered in velocity ... " << endl;
-            cerr << " Program has been terminated ... " << endl;
-            exit(-1);
-          }
-
-          veloDiff = velo - veloPrev;
-          norm_velo_diff = veloDiff.norm();
-          norm_velo = norm_velo_diff/norm_velo;
-        }
-
-        if(stepsCompleted == 10)
-        {
           norm_pres = 1.0;
         }
-        else
-        {
-          norm_pres = pres.norm();
-
-          if( std::isnan(norm_pres) || std::isinf(norm_pres) )
-          {
-            cerr << " NAN encountered in pressue ... " << endl;
-            cerr << " Program has been terminated ... " << endl;
-            exit(-1);
-          }
-
-          presDiff  = pres - presPrev;
-          norm_pres_diff = presDiff.norm();
-          norm_pres = norm_pres_diff/norm_pres;
-        }
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for norm = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
 
         if( (stepsCompleted%outputFreq == 0) || (norm_velo < conv_tol) )
         {
           cout << " stepsCompleted = " << stepsCompleted << '\t' << " timeNow = " << timeNow << endl;
           cout << " velocity difference norm = " << '\t' << norm_velo << endl;
 
-          //postProcess();
+          postProcess();
 
           TotalForce.setZero();
           for(ii=0; ii<outputEdges.size(); ++ii)
@@ -949,951 +895,36 @@ int  ExplicitCFD::solveExplicitStep()
 
         if(norm_velo < conv_tol)
         {
-          cout << " Solution convdataged below the specified tolerance " << endl;
-          //break;
+          cout << " Solution converged below the specified tolerance " << endl;
+          break;
         }
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for postprocessing = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
 
         // store the variables
-        //veloPrev3    = veloPrev2;
-        //veloPrev2    = veloPrev;
+        veloPrev3    = veloPrev2;
+        veloPrev2    = veloPrev;
         veloPrev     = velo;
         veloDotPrev  = veloDot;
 
-        //presPrev3    = presPrev2;
-        //presPrev2    = presPrev;
+        presPrev3    = presPrev2;
+        presPrev2    = presPrev;
         presPrev     = pres;
         presDotPrev  = presDot;
 
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for copying vectors = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
         stepsCompleted = stepsCompleted + 1;
 
         timeNow = timeNow + dt;
 
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for time step increment = " << duration << " microseconds \n\n" << endl;
-
-    //} //Time loop
-
-    //cout << " \n \n Time taken for element routines = " << duration << " microseconds \ntime\n" << endl;
-
-    //auto tend = chrono::steady_clock::now();
-
-    //duration = chrono::duration_cast<chrono::microseconds>(tend-time1).count();
-
-    //cout << " \n \n Total time taken = " << duration << " microseconds \n\n" << endl;
-
-    return 0;
-}
-*/
-
-
-
-/*
-int  ExplicitCFD::solveExplicitStep()
-{
-    calcMassMatrixForExplicitDynamics();
-
-    cout << " Solving the ExplicitCFD " << endl;
-
-    ///////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////
-
-    velo.setZero();      veloPrev.setZero();      veloCur.setZero();
-    veloDot.setZero();   veloDotPrev.setZero();   veloDotCur.setZero();
-    pres.setZero();      presPrev.setZero();      presCur.setZero();
-    presDot.setZero();   presDotPrev.setZero();   presDotCur.setZero();
-
-    int  stepsCompleted=0;
-    int  nsize_velo = rhsVecVelo.rows();
-    int  nsize_pres = rhsVecPres.rows();
-    int  aa, bb, dd, ee, ii, jj, kk, count, row, col, ind;
-
-    double  norm_velo=1.0, norm_pres=1.0;
-    double  dtCrit=1.0e10, fact, fact1, fact2;
-    double  dtgamma11, dtgamma12, norm_velo_diff, norm_pres_diff;
-    double  timeNow=0.0, timeFact=0.0, dt=0.0;
-    double  Re=2.0/elemData[1];
-
-    cout << " Re = " << Re << endl;
-
-    //VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
-    VectorXd  TotalForce(3);
-
-    int nthreads, thread_cur;
-
-    #pragma omp parallel
-    nthreads = omp_get_num_threads();
-
-    cout << " nthreads = " << nthreads << endl;
-
-    MatrixXd  rhsVecVeloLocal(nsize_velo, nthreads);
-    MatrixXd  rhsVecPresLocal(nsize_pres, nthreads);
-
-    //auto tstart = chrono::steady_clock::now();
-    //auto duration=0.0;
-
-    double tstart = omp_get_wtime();
-
-    setInitialConditions();
-    //timeFact = 1.0;
-    //Time loop
-    //while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
-    //{
-        auto time1 = chrono::steady_clock::now();
-
-        //
-        if(stepsCompleted < 5000)
-        {
-          timeFact = 0.5*(1-cos(PI*stepsCompleted/5000));
-          //timeFact = stepsCompleted/5000.0;
-        }
-        else
-        {
-          timeFact = 1.0;
-        }
-        //
-        //timeFact = 1.0;
-
-        auto  time2 = chrono::steady_clock::now();
-
-        auto  duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for time factor = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        //
-        #pragma omp parallel private(ii,kk)
-        {
-          #pragma omp for
-          for(ii=0; ii<nsize_velo; ii++)
-          {
-            for(kk=0; kk<nthreads; kk++)
-              rhsVecVeloLocal(ii,kk)=0.0;
-          }
-
-          #pragma omp for
-          for(ii=0; ii<nsize_pres; ii++)
-          {
-            for(kk=0; kk<nthreads; kk++)
-              rhsVecPresLocal(ii,kk)=0.0;
-          }
-        }
-        //
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for zeroing = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        //auto time1 = chrono::steady_clock::now();
-        //Loop over elements and compute the RHS
-
-        dtCrit=1.0e10;
-        #pragma omp parallel for default(shared) private(ee, ii, jj, kk, dd) reduction(min : dtCrit) //schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
-        for(ee=0; ee<nElem; ee++)
-        {
-            VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
-            fact = timeNow - dt;
-            //Compute the element force vector, including residual force and time step
-            //dtCrit = min(dtCrit, elems[ee]->calcCriticalTimeStep(elemData, timeData, veloPrev));
-
-            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, Flocal1, Flocal2, fact) );
-
-            thread_cur = omp_get_thread_num();
-
-            //printVector(Flocal1);
-            //printVector(Flocal2);
-            //int ii, jj, kk, dd;
-            //Assemble the element vector
-            for(ii=0; ii<npElemVelo; ii++)
-            {
-              jj = ndim*ii;
-              kk = ndim*elemConn[ee][ii];
-
-              for(dd=0; dd<ndim; dd++)
-                rhsVecVeloLocal(kk+dd, thread_cur) += Flocal1(jj+dd);
-            }
-            for(ii=0; ii<npElemPres; ii++)
-            {
-              rhsVecPresLocal(elemConn[ee][ii], thread_cur)   += Flocal2(ii);
-            }
-        } //LoopElem
-        dt = dtCrit*CFL/gamm1;
-
-        // Add specified nodal force 
-        //addExternalForces(timeFact);
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for element loop = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        // compute the solution at t_{n+1}
-        dtgamma11 = dt*gamm1;
-        dtgamma12 = dt*(1.0-gamm1);
-
-        #pragma omp parallel private(ii,jj,kk,fact)
-        {
-          #pragma omp for
-          for(ii=0; ii<totalDOF_Velo; ii++)
-          {
-            //int ii, jj, kk, fact;
-            jj = assyForSolnVelo[ii];
-
-            fact = rhsVecVeloLocal(jj,0);
-            for(kk=1; kk<nthreads; kk++)
-              fact += rhsVecVeloLocal(jj,kk);
-
-            veloDot(jj) = fact*globalMassVelo(jj);
-            velo(jj)    = veloPrev(jj) + dtgamma11*veloDot(jj) + dtgamma12*veloDotPrev(jj);
-          }
-
-          #pragma omp for
-          for(ii=0; ii<totalDOF_Pres; ii++)
-          {
-            jj = assyForSolnPres[ii];
-
-            fact = rhsVecPresLocal(jj,0);
-            for(kk=1; kk<nthreads; kk++)
-              fact += rhsVecPresLocal(jj,kk);
-
-            presDot(jj) = fact*globalMassPres(jj);
-            pres(jj)    = presPrev(jj) + dtgamma11*presDot(jj)+dtgamma12*presDotPrev(jj);
-          }
-        }
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for solution = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        applyBoundaryConditions(timeFact);
-        //printVector(velo);
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for BCs = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        // compute the norms and store the variables
-        norm_velo = 0.0;
-        norm_velo_diff = 0.0;
-        //#pragma omp parallel for private(ii, fact1) reduction(+:norm_velo,norm_velo_diff)
-        for(ii=0; ii<nsize_velo; ii++)
-        {
-          norm_velo += velo[ii]*velo[ii];
-
-          fact1 = velo[ii]-veloPrev[ii];
-          norm_velo_diff += fact1*fact1;
-
-          // store the variables
-          //veloPrev3  = veloPrev2;
-          //veloPrev2  = veloPrev;
-          //veloPrev[ii]  = velo[ii];
-          //accePrev[ii]  = acce[ii];
-        }
-
-        norm_pres = 0.0;
-        norm_pres_diff = 0.0;
-        //#pragma omp parallel for private(ii, fact1) reduction(+:norm_pres, norm_pres_diff)
-        for(ii=0; ii<nsize_pres; ii++)
-        {
-          norm_pres += pres[ii]*pres[ii];
-
-          fact1 = pres[ii]-presPrev[ii];
-          norm_pres_diff += fact1*fact1;
-
-          //presPrev3  = presPrev2;
-          //presPrev2  = presPrev;
-          //presPrev[ii]     = pres[ii];
-          //presDotPrev[ii]  = presDot[ii];
-        }
-//
-        if( std::isnan(norm_velo) || std::isnan(norm_pres) )
-        {
-          cerr << " NAN encountered in the solution ... " << endl;
-          cerr << " Program has been terminated ... " << endl;
-          exit(-1);
-        }
-
-        norm_velo = sqrt(norm_velo_diff/norm_velo);
-        norm_pres = sqrt(norm_pres_diff/norm_pres);
-        if(stepsCompleted == 0)
-        {
-          norm_velo = 1.0;
-          norm_pres = 1.0;
-        }
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for norm = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        if( (stepsCompleted%outputFreq == 0) || (norm_velo < conv_tol) )
-        {
-            //norm_velo = sqrt(norm_velo);
-            //norm_pres = sqrt(norm_pres);
-
-            cout << " stepsCompleted = " << stepsCompleted << '\t' << " timeNow = " << timeNow << endl;
-            cout << " velocity difference norm = " << '\t' << norm_velo << endl;
-
-            //postProcess();
-
-            TotalForce.setZero();
-            for(ii=0; ii<outputEdges.size(); ii++)
-            {
-              elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);
-            }
-
-            fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
-            fout_convdata << '\t' << TotalForce(0) << '\t' << TotalForce(1) << '\t' << TotalForce(2) << endl;
-        }
-
-        if(norm_velo < conv_tol)
-        {
-          cout << " Solution convdataged below the specified tolerance " << endl;
-          //break;
-        }
-//
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for postprocessing = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        //
-        // store the variables
-        #pragma omp parallel private(ii)
-        {
-          #pragma omp for
-          for(ii=0; ii<nsize_velo; ii++)
-          {
-            //veloPrev3  = veloPrev2;
-            //veloPrev2  = veloPrev;
-            veloPrev[ii]  = velo[ii];
-            veloDotPrev[ii]  = veloDot[ii];
-          }
-
-          #pragma omp for
-          for(ii=0; ii<nsize_pres; ii++)
-          {
-            //presPrev3  = presPrev2;
-            //presPrev2  = presPrev;
-            presPrev[ii]     = pres[ii];
-            presDotPrev[ii]  = presDot[ii];
-          }
-        }
-        //
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for copying vectors = " << duration << " microseconds \n\n" << endl;
-
-        time1 = chrono::steady_clock::now();
-
-        stepsCompleted = stepsCompleted + 1;
-
-        timeNow = timeNow + dt;
-
-        time2 = chrono::steady_clock::now();
-        duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        cout << " \n \n Time taken for time step increment = " << duration << " microseconds \n\n" << endl;
-    //} //Time loop
-
-    //postProcess();
-
-    //cout << " \n \n Time taken for element routines = " << duration << " milliseconds \n\n" << endl;
-
-    //auto tend = chrono::steady_clock::now();
-
-    //duration = chrono::duration_cast<chrono::milliseconds>(tend-tstart).count();
-
-    //double tend = omp_get_wtime(), duration=tend-tstart;
-
-    //cout << " \n \n Total time taken = " << duration << " seconds \n\n" << endl;
-
-    return 0;
-}
-*/
-
-
-//
-int  ExplicitCFD::solveExplicitStep()
-{
-    // OpenMP parallelisation using a single rhs vector and critical construct
-
-    calcMassMatrixForExplicitDynamics();
-
-    cout << " Solving the ExplicitCFD " << endl;
-
-    ///////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////
-
-    velo.setZero();      veloPrev.setZero();      veloCur.setZero();
-    veloDot.setZero();   veloDotPrev.setZero();   veloDotCur.setZero();
-    pres.setZero();      presPrev.setZero();      presCur.setZero();
-    presDot.setZero();   presDotPrev.setZero();   presDotCur.setZero();
-
-    int  stepsCompleted=0;
-    int  nsize_velo = rhsVecVelo.rows();
-    int  nsize_pres = rhsVecPres.rows();
-    int  aa, bb, dd, ee, ii, jj, kk, count, row, col, ind;
-
-    double  norm_velo=1.0, norm_pres=1.0;
-    double  dtCrit=1.0e10, fact, fact1, fact2;
-    double  dtgamma11, dtgamma12, norm_velo_diff, norm_pres_diff;
-    double  timeNow=0.0, timeFact=0.0, dt=0.0;
-    double  Re=2.0/elemData[1];
-
-    cout << " Re = " << Re << endl;
-
-    //VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
-    VectorXd  TotalForce(3);
-
-    int nthreads, thread_cur;
-
-    #pragma omp parallel
-    nthreads = omp_get_num_threads();
-
-    cout << " nthreads = " << nthreads << endl;
-
-    double tstart = omp_get_wtime();
-
-    //velo=veloApplied;
-    //postProcess();
-
-    //setInitialConditions();
-    //timeFact = 1.0;
-    //Time loop
-    while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
-    {
-        //
-        if(stepsCompleted < 1000)
-        {
-          timeFact = 0.5*(1-cos(PI*stepsCompleted/1000));
-          //timeFact = stepsCompleted/5000.0;
-        }
-        else
-        {
-          timeFact = 1.0;
-        }
-        //
-        //timeFact = 1.0;
-
-        //double  time1 = omp_get_wtime();
-
-          //#pragma omp sections
-          //{
-            //#pragma omp section
-            for(ii=0; ii<nsize_velo; ii++)
-            {
-              rhsVecVelo(ii)=0.0;
-            }
-
-            //#pragma omp section
-            for(ii=0; ii<nsize_pres; ii++)
-            {
-              rhsVecPres(ii)=0.0;
-            }
-          //}
-
-        #pragma omp parallel private(ee, ii, jj, kk, dd) default(shared)
-        {
-          //Loop over elements and compute the RHS and time step
-          dtCrit=1.0e10;
-          #pragma omp for reduction(min : dtCrit) schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
-          for(ee=0; ee<nElem; ee++)
-          {
-            VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
-            fact = timeNow - dt;
-            //Compute the element force vector, including residual force and time step
-            //dtCrit = min(dtCrit, elems[ee]->calcCriticalTimeStep(elemData, timeData, veloPrev));
-
-            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, Flocal1, Flocal2, fact) );
-
-            //printVector(Flocal1);
-            //printVector(Flocal2);
-            //int ii, jj, kk, dd;
-            //Assemble the element vector
-            #pragma omp critical
-            {
-              for(ii=0; ii<npElemVelo; ii++)
-              {
-                jj = ndim*ii;
-                kk = ndim*elemConn[ee][ii];
-
-                for(dd=0; dd<ndim; dd++)
-                  rhsVecVelo(kk+dd) += Flocal1(jj+dd);
-              }
-              for(ii=0; ii<npElemPres; ii++)
-              {
-                rhsVecPres(elemConn[ee][ii])   += Flocal2(ii);
-              }
-            }
-          } //LoopElem
-          dt = dtCrit*CFL/gamm1;
-
-          // Add specified nodal force 
-          //addExternalForces(timeFact);
-
-          // compute the solution at t_{n+1}
-          dtgamma11 = dt*gamm1;
-          dtgamma12 = dt*(1.0-gamm1);
-
-          #pragma omp for
-          for(ii=0; ii<totalDOF_Velo; ii++)
-          {
-            jj = assyForSolnVelo[ii];
-
-            veloDot(jj) = rhsVecVelo(jj)/globalMassVelo(jj);
-            velo(jj)    = veloPrev(jj) + dtgamma11*veloDot(jj) + dtgamma12*veloDotPrev(jj);
-          }
-
-          #pragma omp for
-          for(ii=0; ii<totalDOF_Pres; ii++)
-          {
-            jj = assyForSolnPres[ii];
-
-            presDot(jj) = rhsVecPres(jj)/globalMassPres(jj);
-            pres(jj)    = presPrev(jj) + dtgamma11*presDot(jj)+dtgamma12*presDotPrev(jj);
-          }
-
-          #pragma omp single
-          applyBoundaryConditions(timeFact);
-          //printVector(velo);
-
-          // compute the norms and store the variables
-          norm_velo = 0.0;
-          norm_velo_diff = 0.0;
-          #pragma omp for reduction(+:norm_velo,norm_velo_diff)
-          for(ii=0; ii<nsize_velo; ii++)
-          {
-            norm_velo += velo[ii]*velo[ii];
-
-            fact1 = velo[ii]-veloPrev[ii];
-            norm_velo_diff += fact1*fact1;
-
-            // store the variables
-            //veloPrev3  = veloPrev2;
-            //veloPrev2  = veloPrev;
-            veloPrev[ii]  = velo[ii];
-            veloDotPrev[ii]  = veloDot[ii];
-          }
-
-          norm_pres = 0.0;
-          norm_pres_diff = 0.0;
-          #pragma omp for reduction(+:norm_pres, norm_pres_diff)
-          for(ii=0; ii<nsize_pres; ii++)
-          {
-            norm_pres += pres[ii]*pres[ii];
-
-            fact1 = pres[ii]-presPrev[ii];
-            norm_pres_diff += fact1*fact1;
-
-            //presPrev3  = presPrev2;
-            //presPrev2  = presPrev;
-            presPrev[ii]     = pres[ii];
-            presDotPrev[ii]  = presDot[ii];
-          }
-        }
-
-        //double  duration = omp_get_wtime() - time1;
-
-        //cout << " \n \n Time taken for solution = " << duration*1e3 << " milliseconds \n\n" << endl;
-
-        //time1 = chrono::steady_clock::now();
-
-        if( std::isnan(norm_velo) || std::isnan(norm_pres) )
-        {
-          cerr << " NAN encountered in the solution ... " << endl;
-          cerr << " Program has been terminated ... " << endl;
-          exit(-1);
-        }
-
-        norm_velo = sqrt(norm_velo_diff/norm_velo);
-        norm_pres = sqrt(norm_pres_diff/norm_pres);
-        if(stepsCompleted == 0)
-        {
-          norm_velo = 1.0;
-          norm_pres = 1.0;
-        }
-
-        //time2 = chrono::steady_clock::now();
-        //duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        //cout << " \n \n Time taken for norm = " << duration << " microseconds \n\n" << endl;
-
-        //time1 = chrono::steady_clock::now();
-
-        if( (stepsCompleted%outputFreq == 0) || (norm_velo < conv_tol) )
-        {
-            //norm_velo = sqrt(norm_velo);
-            //norm_pres = sqrt(norm_pres);
-
-            cout << " stepsCompleted = " << stepsCompleted << '\t' << " timeNow = " << timeNow << endl;
-            cout << " velocity difference norm = " << '\t' << norm_velo << endl;
-
-            postProcess();
-
-            //cout << " outputEdges.size() = " << outputEdges.size() << endl;
-            TotalForce.setZero();
-            for(ii=0; ii<outputEdges.size(); ii++)
-            {
-              //cout << ii << '\t' << outputEdges[ii][0] << '\t' << outputEdges[ii][1] << endl;
-              elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);
-            }
-
-            fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
-            fout_convdata << '\t' << TotalForce(0) << '\t' << TotalForce(1) << '\t' << TotalForce(2) << endl;
-        }
-
-        if(norm_velo < conv_tol)
-        {
-          cout << " Solution convdataged below the specified tolerance " << endl;
-          //break;
-        }
-//
-        //time2 = chrono::steady_clock::now();
-        //duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        //cout << " \n \n Time taken for postprocessing = " << duration << " microseconds \n\n" << endl;
-
-        stepsCompleted = stepsCompleted + 1;
-        timeNow = timeNow + dt;
     } //Time loop
 
-    //postProcess();
+    auto tend = chrono::steady_clock::now();
 
-    //cout << " \n \n Time taken for element routines = " << duration << " milliseconds \n\n" << endl;
+    duration = chrono::duration_cast<chrono::milliseconds>(tend-time1).count();
 
-    //auto tend = chrono::steady_clock::now();
-
-    //duration = chrono::duration_cast<chrono::milliseconds>(tend-tstart).count();
-
-    //double tend = omp_get_wtime(), duration=tend-tstart;
-
-    //cout << " \n \n Total time taken = " << duration << " seconds \n\n" << endl;
+    cout << " \n \n Total time taken = " << duration << " milliseconds \n\n" << endl;
 
     return 0;
 }
-//
 
 
-/*
-int  ExplicitCFD::solveExplicitStep()
-{
-    // OpenMP parallelisation using local rhs vectors
 
-    calcMassMatrixForExplicitDynamics();
-
-    cout << " Solving the ExplicitCFD " << endl;
-
-    ///////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////
-
-    velo.setZero();      veloPrev.setZero();      veloCur.setZero();
-    veloDot.setZero();   veloDotPrev.setZero();   veloDotCur.setZero();
-    pres.setZero();      presPrev.setZero();      presCur.setZero();
-    presDot.setZero();   presDotPrev.setZero();   presDotCur.setZero();
-
-    int  stepsCompleted=0;
-    int  nsize_velo = rhsVecVelo.rows();
-    int  nsize_pres = rhsVecPres.rows();
-    int  aa, bb, dd, ee, ii, jj, kk, count, row, col, ind;
-
-    double  norm_velo=1.0, norm_pres=1.0;
-    double  dtCrit=1.0e10, fact, fact1, fact2;
-    double  dtgamma11, dtgamma12, norm_velo_diff, norm_pres_diff;
-    double  timeNow=0.0, timeFact=0.0, dt=0.0;
-    double  Re=2.0/elemData[1];
-
-    cout << " Re = " << Re << endl;
-
-    //VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
-    VectorXd  TotalForce(3);
-
-    int nthreads, thread_cur;
-
-    #pragma omp parallel
-    nthreads = omp_get_num_threads();
-
-    cout << " nthreads = " << nthreads << endl;
-
-    MatrixXd  rhsVecVeloLocal(nsize_velo, nthreads);
-    MatrixXd  rhsVecPresLocal(nsize_pres, nthreads);
-
-    //double tstart = omp_get_wtime();
-
-    setInitialConditions();
-    //timeFact = 1.0;
-    //Time loop
-    //while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
-    //{
-        //
-        if(stepsCompleted < 5000)
-        {
-          timeFact = 0.5*(1-cos(PI*stepsCompleted/5000));
-          //timeFact = stepsCompleted/5000.0;
-        }
-        else
-        {
-          timeFact = 1.0;
-        }
-        //
-        //timeFact = 1.0;
-
-
-          //#pragma omp sections
-          //{
-            //#pragma omp section
-            //{
-              for(ii=0; ii<nsize_velo; ii++)
-              {
-                for(kk=0; kk<nthreads; kk++)
-                  rhsVecVeloLocal(ii,kk)=0.0;
-              }
-            //}
-
-            //#pragma omp section
-            //{
-              for(ii=0; ii<nsize_pres; ii++)
-              {
-                for(kk=0; kk<nthreads; kk++)
-                  rhsVecPresLocal(ii,kk)=0.0;
-              }
-            //}
-          //}
-
-        double  time1 = omp_get_wtime();
-
-        #pragma omp parallel private(ee, ii, jj, kk, dd) default(shared)
-        {
-          //Loop over elements and compute the RHS
-
-          dtCrit=1.0e10;
-          #pragma omp for reduction(min : dtCrit) schedule(dynamic,200) 
-          for(ee=0; ee<nElem; ee++)
-          {
-            VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
-            fact = timeNow - dt;
-            //Compute the element force vector, including residual force and time step
-            //dtCrit = min(dtCrit, elems[ee]->calcCriticalTimeStep(elemData, timeData, veloPrev));
-
-            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, Flocal1, Flocal2, fact) );
-
-            thread_cur = omp_get_thread_num();
-
-            //printVector(Flocal1);
-            //printVector(Flocal2);
-            //int ii, jj, kk, dd;
-            //Assemble the element vector
-            for(ii=0; ii<npElemVelo; ii++)
-            {
-              jj = ndim*ii;
-              kk = ndim*elemConn[ee][ii];
-
-              for(dd=0; dd<ndim; dd++)
-                rhsVecVeloLocal(kk+dd, thread_cur) += Flocal1(jj+dd);
-            }
-            for(ii=0; ii<npElemPres; ii++)
-            {
-              rhsVecPresLocal(elemConn[ee][ii], thread_cur)   += Flocal2(ii);
-            }
-          } //LoopElem
-          dt = dtCrit*CFL/gamm1;
-        }
-        //
-
-        double  duration = omp_get_wtime() - time1;
-
-        cout << " \n \n Time taken for solution = " << duration*1e3 << " milliseconds \n\n" << endl;
-
-        // Add specified nodal force 
-        //addExternalForces(timeFact);
-
-        //time1 = chrono::steady_clock::now();
-
-        // compute the solution at t_{n+1}
-        dtgamma11 = dt*gamm1;
-        dtgamma12 = dt*(1.0-gamm1);
-
-        //#pragma omp parallel private(ii,jj,kk,fact)
-        //{
-          //#pragma omp for
-          for(ii=0; ii<totalDOF_Velo; ii++)
-          {
-            //int ii, jj, kk, fact;
-            jj = assyForSolnVelo[ii];
-
-            fact = rhsVecVeloLocal(jj,0);
-            for(kk=1; kk<nthreads; kk++)
-              fact += rhsVecVeloLocal(jj,kk);
-
-            veloDot(jj) = fact*globalMassVelo(jj);
-            velo(jj)    = veloPrev(jj) + dtgamma11*veloDot(jj) + dtgamma12*veloDotPrev(jj);
-          }
-
-          //#pragma omp for
-          for(ii=0; ii<totalDOF_Pres; ii++)
-          {
-            jj = assyForSolnPres[ii];
-
-            fact = rhsVecPresLocal(jj,0);
-            for(kk=1; kk<nthreads; kk++)
-              fact += rhsVecPresLocal(jj,kk);
-
-            presDot(jj) = fact*globalMassPres(jj);
-            pres(jj)    = presPrev(jj) + dtgamma11*presDot(jj)+dtgamma12*presDotPrev(jj);
-          }
-        //}
-
-        //time2 = chrono::steady_clock::now();
-        //duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        //cout << " \n \n Time taken for solution = " << duration << " microseconds \n\n" << endl;
-
-        applyBoundaryConditions(timeFact);
-        //printVector(velo);
-
-        //time2 = chrono::steady_clock::now();
-        //duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        //cout << " \n \n Time taken for BCs = " << duration << " microseconds \n\n" << endl;
-
-        //time1 = chrono::steady_clock::now();
-
-        // compute the norms and store the variables
-        norm_velo = 0.0;
-        norm_velo_diff = 0.0;
-        //#pragma omp parallel for private(ii, fact1) reduction(+:norm_velo,norm_velo_diff)
-        for(ii=0; ii<nsize_velo; ii++)
-        {
-          norm_velo += velo[ii]*velo[ii];
-
-          fact1 = velo[ii]-veloPrev[ii];
-          norm_velo_diff += fact1*fact1;
-
-          // store the variables
-          //veloPrev3  = veloPrev2;
-          //veloPrev2  = veloPrev;
-          //veloPrev[ii]  = velo[ii];
-          //accePrev[ii]  = acce[ii];
-        }
-
-        norm_pres = 0.0;
-        norm_pres_diff = 0.0;
-        //#pragma omp parallel for private(ii, fact1) reduction(+:norm_pres, norm_pres_diff)
-        for(ii=0; ii<nsize_pres; ii++)
-        {
-          norm_pres += pres[ii]*pres[ii];
-
-          fact1 = pres[ii]-presPrev[ii];
-          norm_pres_diff += fact1*fact1;
-
-          //presPrev3  = presPrev2;
-          //presPrev2  = presPrev;
-          //presPrev[ii]     = pres[ii];
-          //presDotPrev[ii]  = presDot[ii];
-        }
-//
-        if( std::isnan(norm_velo) || std::isnan(norm_pres) )
-        {
-          cerr << " NAN encountered in the solution ... " << endl;
-          cerr << " Program has been terminated ... " << endl;
-          exit(-1);
-        }
-
-        norm_velo = sqrt(norm_velo_diff/norm_velo);
-        norm_pres = sqrt(norm_pres_diff/norm_pres);
-        if(stepsCompleted == 0)
-        {
-          norm_velo = 1.0;
-          norm_pres = 1.0;
-        }
-
-        //double  duration = omp_get_wtime() - time1;
-
-        //cout << " \n \n Time taken for solution = " << duration*1e3 << " milliseconds \n\n" << endl;
-
-        if( (stepsCompleted%outputFreq == 0) || (norm_velo < conv_tol) )
-        {
-            //norm_velo = sqrt(norm_velo);
-            //norm_pres = sqrt(norm_pres);
-
-            cout << " stepsCompleted = " << stepsCompleted << '\t' << " timeNow = " << timeNow << endl;
-            cout << " velocity difference norm = " << '\t' << norm_velo << endl;
-
-            //postProcess();
-
-            TotalForce.setZero();
-            for(ii=0; ii<outputEdges.size(); ii++)
-            {
-              elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);
-            }
-
-            fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
-            fout_convdata << '\t' << TotalForce(0) << '\t' << TotalForce(1) << '\t' << TotalForce(2) << endl;
-        }
-
-        if(norm_velo < conv_tol)
-        {
-          cout << " Solution convdataged below the specified tolerance " << endl;
-          //break;
-        }
-//
-        //time2 = chrono::steady_clock::now();
-        //duration = chrono::duration_cast<chrono::microseconds>(time2-time1).count();
-
-        //cout << " \n \n Time taken for postprocessing = " << duration << " microseconds \n\n" << endl;
-
-        stepsCompleted = stepsCompleted + 1;
-        timeNow = timeNow + dt;
-    //} //Time loop
-
-    //postProcess();
-
-    //cout << " \n \n Time taken for element routines = " << duration << " milliseconds \n\n" << endl;
-
-    //auto tend = chrono::steady_clock::now();
-
-    //duration = chrono::duration_cast<chrono::milliseconds>(tend-tstart).count();
-
-    //double tend = omp_get_wtime(), duration=tend-tstart;
-
-    //cout << " \n \n Total time taken = " << duration << " seconds \n\n" << endl;
-
-    return 0;
-}
-*/
 

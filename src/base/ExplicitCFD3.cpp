@@ -171,7 +171,7 @@ void  ExplicitCFD::postProcess()
 
     //Write the file.
     char VTKfilename[200];
-    sprintf(VTKfilename,"%s%d%s", "vtk-output-",fileCount,".vtu");
+    sprintf(VTKfilename,"%s%s%06d%s", infilename.c_str(), "-",fileCount,".vtu");
     writerUGridVTK->SetFileName(VTKfilename);
     writerUGridVTK->SetInputData(uGridVTK);
     writerUGridVTK->Write();

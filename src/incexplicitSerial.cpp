@@ -37,19 +37,13 @@ int main(int argc, char* argv[])
 
     explcfd.readInputData(infile);
 
-    explcfd.readControlParameters(infile);
+    explcfd.readControlParameters();
 
     explcfd.prepareInputData();
 
     explcfd.solveExplicitStep();
 
     //explcfd.computeElementErrors(1);
-
-    //explcfd.solveExplicitStepDTS();
-
-    //if( !infileOutput.empty() )
-
-    //cout << " cccccccccccccc " << endl;
 
     cout << " Program is successful \n " << endl;
 

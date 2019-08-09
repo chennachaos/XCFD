@@ -5,7 +5,7 @@ Explicit scheme for CFD using a new finite element scheme. At the moment limited
 * C++ standard: **C++11** (or above)
 * Required third-party libraries:
   1.) [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
-  2.) [VTK](https://vtk.org/)
+  2.) [VTK](https://vtk.org/) (This is optional. Can output in VTK legacy format by defining the VTK_LEGACY_FORMAT variable in the compiler options.
 
 
 ## Compilation and building

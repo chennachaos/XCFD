@@ -16,7 +16,7 @@ print("Started the simulation \n")
 #cmd="./incexplicitSerial  " + inpfile + "  >  simulation.log"
 cmd="./incexplicitSerial  " + inpfile
 
-#os.system(cmd)
+os.system(cmd)
 
 print("Completed the simulation \n")
 

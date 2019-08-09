@@ -534,7 +534,7 @@ void ExplicitCFD::prepareInputData()
 
         //DirichletBCsVelo[ii][2] = analy.computeValue(n2, xx, yy);
 
-        veloApplied(jj) = DirichletBCsVelo[ii][2];
+        veloApplied[jj] = DirichletBCsVelo[ii][2];
     }
 
     cout << " ppppppppp " << endl;
@@ -565,7 +565,7 @@ void ExplicitCFD::prepareInputData()
 
         //DirichletBCsPres[ii][2] = analy.computeValue(ndim, xx, yy);
 
-        presApplied(jj) = DirichletBCsPres[ii][2];
+        presApplied[jj] = DirichletBCsPres[ii][2];
     }
 
     cout << " aaaaaaaaaaaaaaa " << endl;
@@ -768,7 +768,7 @@ int  ExplicitCFD::solveExplicitStep()
 
     //cout << " Re = " << Re << endl;
 
-    VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof);
+    VectorXd  FlocalVelo(npElem*ndof), FlocalPres(npElem*ndof);
     VectorXd  TotalForce(3);
 
     double  timeNow=0.0, timeFact=0.0;
@@ -802,7 +802,7 @@ int  ExplicitCFD::solveExplicitStep()
         dtCrit=1.0e10;
         for(ee=0; ee<nElem; ++ee)
         {
-            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, Flocal1, Flocal2, fact) );
+            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, FlocalVelo, FlocalPres, fact) );
 
             //Assemble the element vector
             for(ii=0; ii<npElemVelo; ++ii)
@@ -811,11 +811,11 @@ int  ExplicitCFD::solveExplicitStep()
               kk = ndim*elemConn[ee][ii];
 
               for(dd=0; dd<ndim; dd++)
-                rhsVecVelo(kk+dd) += Flocal1(jj+dd);
+                rhsVecVelo[kk+dd] += FlocalVelo(jj+dd);
             }
             for(ii=0; ii<npElemPres; ++ii)
             {
-              rhsVecPres(elemConn[ee][ii])   += Flocal2(ii);
+              rhsVecPres[elemConn[ee][ii]]   += FlocalPres[ii];
             }
         } //LoopElem
         dt = dtCrit*CFL/gamm1;
@@ -835,16 +835,16 @@ int  ExplicitCFD::solveExplicitStep()
         {
           jj = assyForSolnVelo[ii];
 
-          veloDot(jj) = rhsVecVelo(jj)/globalMassVelo(jj);
-          velo(jj)    = veloPrev(jj) + dtgamma11*veloDot(jj) + dtgamma12*veloDotPrev(jj);
+          veloDot[jj] = rhsVecVelo[jj]/globalMassVelo[jj];
+          velo[jj]    = veloPrev[jj] + dtgamma11*veloDot[jj] + dtgamma12*veloDotPrev[jj];
         }
 
         for(ii=0; ii<totalDOF_Pres; ++ii)
         {
           jj = assyForSolnPres[ii];
 
-          presDot(jj) = rhsVecPres(jj)/globalMassPres(jj);
-          pres(jj)    = presPrev(jj) + dtgamma11*presDot(jj) + dtgamma12*presDotPrev(jj);
+          presDot[jj] = rhsVecPres[jj]/globalMassPres[jj];
+          pres[jj]    = presPrev[jj] + dtgamma11*presDot[jj] + dtgamma12*presDotPrev[jj];
         }
 
         // apply boundary conditions
@@ -890,7 +890,7 @@ int  ExplicitCFD::solveExplicitStep()
           }
 
           fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
-          fout_convdata << '\t' << TotalForce(0) << '\t' << TotalForce(1) << '\t' << TotalForce(2) << endl;
+          fout_convdata << '\t' << TotalForce[0] << '\t' << TotalForce[1] << '\t' << TotalForce[2] << endl;
         }
 
         if(norm_velo < conv_tol)

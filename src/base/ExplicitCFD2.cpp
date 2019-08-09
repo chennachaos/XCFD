@@ -241,16 +241,16 @@ void ExplicitCFD::applyBoundaryConditions(double timeFact)
 
         jj = n1*ndim+n2;
 
-        velo(jj)    = veloApplied(jj) * timeFact;
-        veloDot(jj) = fact1 * (velo(jj)-veloPrev(jj)) + fact2 * veloDotPrev(jj);
+        velo[jj]    = veloApplied[jj] * timeFact;
+        veloDot[jj] = fact1 * (velo[jj]-veloPrev[jj]) + fact2 * veloDotPrev[jj];
     }
 
     for(ii=0; ii<nDBC_Pres; ++ii)
     {
         jj = DirichletBCsPres[ii][0];
 
-        pres(jj)    = DirichletBCsPres[ii][2] * timeFact;
-        presDot(jj) = fact1 * (pres(jj)-presPrev(jj)) + fact2 * presDotPrev(jj);
+        pres[jj]    = DirichletBCsPres[ii][2] * timeFact;
+        presDot[jj] = fact1 * (pres[jj]-presPrev[jj]) + fact2 * presDotPrev[jj];
     }
 
     return;
@@ -291,7 +291,7 @@ int ExplicitCFD::calcMassMatrixForExplicitDynamics()
 
     int  dd, ee, ii, jj;
 
-    VectorXd  Flocal1(npElem*ndim), Flocal2(npElem);
+    VectorXd  FlocalVelo(npElem*ndim), FlocalPres(npElem);
 
     // Compute global mass matrices
     //The Mass is assumed to be lumped so that the mass matrix is diagonal
@@ -302,7 +302,7 @@ int ExplicitCFD::calcMassMatrixForExplicitDynamics()
     for(ee=0; ee<nElem; ++ee)
     {
         // compute mass matrix and assemble it
-        elems[ee]->MassMatrices(node_coords, elemData, Flocal1, Flocal2);
+        elems[ee]->MassMatrices(node_coords, elemData, FlocalVelo, FlocalPres);
 
         //Assemble the element mass to the global mass
         for(ii=0; ii<npElemVelo; ++ii)
@@ -310,12 +310,12 @@ int ExplicitCFD::calcMassMatrixForExplicitDynamics()
             jj = elemConn[ee][ii]*ndim ;
 
             for(dd=0; dd<ndim; dd++)
-              globalMassVelo(jj+dd)   +=  Flocal1(ii);
+              globalMassVelo[jj+dd]   +=  FlocalVelo[ii];
         }
 
         for(ii=0; ii<npElemPres; ++ii)
         {
-            globalMassPres(elemConn[ee][ii]) += Flocal2(ii);
+            globalMassPres[elemConn[ee][ii]] += FlocalPres[ii];
         }
     }
 
@@ -355,7 +355,7 @@ int  ExplicitCFD::solveExplicitStepDTS()
     double  timeNow=0.0;
     double  timeFact=0.0;
 
-    VectorXd  Flocal1(npElem*ndof), Flocal2(npElem*ndof), TotalForce(3);
+    VectorXd  FlocalVelo(npElem*ndof), FlocalPres(npElem*ndof), TotalForce(3);
 
     setInitialConditions();
 
@@ -400,13 +400,13 @@ int  ExplicitCFD::solveExplicitStepDTS()
         ind = nNode_Velo*ndim;
         for(ii=0; ii<ind; ++ii)
         {
-          rhsVecVelo2(ii) = globalMassVelo(ii)*(fact1*velo(ii) - fact2*veloDot(ii));
+          rhsVecVelo2[ii] = globalMassVelo[ii]*(fact1*velo[ii] - fact2*veloDot[ii]);
         }
 
         rhsVecPres2.setZero();
         for(ii=0; ii<nNode_Pres; ++ii)
         {
-          rhsVecPres2(ii) = globalMassPres(ii)*(fact1*pres(ii) - fact2*presDot(ii));
+          rhsVecPres2[ii] = globalMassPres[ii]*(fact1*pres[ii] - fact2*presDot[ii]);
         }
 
         pseduostepsCount = 0;
@@ -422,9 +422,9 @@ int  ExplicitCFD::solveExplicitStepDTS()
 
             jj = n1*ndim+n2;
 
-            veloMp1(jj) = veloApplied(jj)*timeFact;
+            veloMp1[jj] = veloApplied[jj]*timeFact;
 
-            veloDotMp1(jj) = (veloMp1(jj)-veloM(jj))/(gamm1*dt) - (1.0-gamm1)*veloDotM(jj)/gamm1;
+            veloDotMp1[jj] = (veloMp1[jj]-veloM[jj])/(gamm1*dt) - (1.0-gamm1)*veloDotM[jj]/gamm1;
           }
 
           //Loop over elements and compute the RHS
@@ -436,7 +436,7 @@ int  ExplicitCFD::solveExplicitStepDTS()
           {
             fact = timeNow - dt;
             //Compute the element force vector, including residual force
-            dtCrit = elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, veloM, veloPrev, veloDotM, veloDotPrev, presM, presPrev, Flocal1, Flocal2, fact);
+            dtCrit = elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, veloM, veloPrev, veloDotM, veloDotPrev, presM, presPrev, FlocalVelo, FlocalPres, fact);
 
             //Assemble the element vector
             for(ii=0; ii<npElemVelo; ++ii)
@@ -444,13 +444,13 @@ int  ExplicitCFD::solveExplicitStepDTS()
               jj = ndim*ii;
               kk = ndim*elemConn[ee][ii];
 
-              rhsVecVelo(kk)   += Flocal1(jj);
-              rhsVecVelo(kk+1) += Flocal1(jj+1);
+              rhsVecVelo[kk]   += FlocalVelo[jj];
+              rhsVecVelo[kk+1] += FlocalVelo[jj+1];
             }
 
             for(ii=0; ii<npElemPres; ++ii)
             {
-              rhsVecPres(elemConn[ee][ii])   += Flocal2(ii);
+              rhsVecPres[elemConn[ee][ii]]   += FlocalPres[ii];
             }
           } //LoopElem
 
@@ -463,15 +463,15 @@ int  ExplicitCFD::solveExplicitStepDTS()
           {
             jj = assyForSolnVelo[ii];
 
-            veloDotMp1(jj) = (rhsVecVelo2(jj) + rhsVecVelo(jj) - globalMassVelo(jj)*veloM(jj)/gamm1/dt)/globalMassVelo(jj);
+            veloDotMp1[jj] = (rhsVecVelo2[jj] + rhsVecVelo[jj] - globalMassVelo[jj]*veloM[jj]/gamm1/dt)/globalMassVelo[jj];
 
-            veloMp1(jj) = veloM(jj) + dtau*(gamm1*veloDotMp1(jj)+(1.0-gamm1)*veloDotM(jj));
+            veloMp1[jj] = veloM[jj] + dtau*(gamm1*veloDotMp1[jj]+(1.0-gamm1)*veloDotM[jj]);
 
-            if( std::isnan(abs(veloMp1(jj))) )
+            if( std::isnan(abs(veloMp1[jj])) )
             {
               cerr << " NAN encountered in velocity ... " << endl;
               cerr << " Program has been terminated ... " << endl;
-              cout << jj << '\t' << globalMassVelo(jj) << '\t' << rhsVecVelo(jj) << endl;
+              cout << jj << '\t' << globalMassVelo[jj] << '\t' << rhsVecVelo[jj] << endl;
               exit(-1);
             }
           }
@@ -480,11 +480,11 @@ int  ExplicitCFD::solveExplicitStepDTS()
           {
             jj = assyForSolnPres[ii];
 
-            presDotMp1(jj) = (rhsVecPres2(jj) + rhsVecPres(jj) - globalMassPres(jj)*presM(jj)/gamm2/dt)/globalMassPres(jj);
+            presDotMp1[jj] = (rhsVecPres2[jj] + rhsVecPres[jj] - globalMassPres[jj]*presM[jj]/gamm2/dt)/globalMassPres[jj];
 
-            presMp1(jj)    = presM(jj) + dtau*(gamm2*presDotMp1(jj)+(1.0-gamm2)*presDotM(jj));
+            presMp1[jj]    = presM[jj] + dtau*(gamm2*presDotMp1[jj]+(1.0-gamm2)*presDotM[jj]);
 
-            if( std::isnan(abs(presMp1(jj))) )
+            if( std::isnan(abs(presMp1[jj])) )
             {
                 cerr << " NAN encountered in pressure ... " << endl;
                 cerr << " Program has been terminated ... " << endl;
@@ -589,9 +589,9 @@ void ExplicitCFD::computeElementErrors(int ind)
       n2 = ii*ndim;
 
       for(dd=0; dd<ndim; dd++)
-        solnVTK(n1+dd) = velo(n2+dd);
+        solnVTK[n1+dd] = velo[n2+dd];
 
-      solnVTK(n1+ndim) = pres(ii);
+      solnVTK[n1+ndim] = pres[ii];
     }
 
     double totalError = 0.0, timeNow;

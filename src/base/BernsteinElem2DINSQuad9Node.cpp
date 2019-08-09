@@ -39,7 +39,7 @@ BernsteinElem2DINSQuad9Node::~BernsteinElem2DINSQuad9Node()
 }
 
 
-void BernsteinElem2DINSQuad9Node::prepareElemData(vector<vector<double> >& node_coords)
+void BernsteinElem2DINSQuad9Node::prepareElemData(const vector<vector<double> >& node_coords)
 {
     //printVector(nodeNums);
 
@@ -52,9 +52,6 @@ void BernsteinElem2DINSQuad9Node::prepareElemData(vector<vector<double> >& node_
     double xNode[npElem], yNode[npElem], xx, yy;
     for(ii=0;ii<npElem;ii++)
     {
-      //xNode[ii] = GeomData->NodePosOrig[SolnData->node_map_new_to_old[nodeNums[ii]]][0];
-      //yNode[ii] = GeomData->NodePosOrig[SolnData->node_map_new_to_old[nodeNums[ii]]][1];
-
       xNode[ii] = node_coords[nodeNums[ii]][0];
       yNode[ii] = node_coords[nodeNums[ii]][1];
     }
@@ -153,7 +150,7 @@ void BernsteinElem2DINSQuad9Node::prepareElemData(vector<vector<double> >& node_
 }
 
 
-double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<double> >& node_coods, double* elemData, double* timeData, VectorXd& veloVec, VectorXd& veloVecPrev, VectorXd& veloDotVec, VectorXd& veloDotVecPrev, VectorXd& presVec, VectorXd& presVecPrev, VectorXd&  Flocal1, VectorXd&  Flocal2, double timeCur)
+double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, VectorXd&  FlocalVelo, VectorXd&  FlocalPres, double timeCur)
 {
     double  b1, b2, b3, b4, Da;
     double  velo[2], veloPrev[2], Du[2], dp[2], resi[2], rStab[2], gradTvel[2], pres;
@@ -187,8 +184,8 @@ double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<dou
     //KimMoinFlow  analy(rho, mu, 0.0);
 
     //loop over Gauss points and compute element residual
-    Flocal1.setZero();
-    Flocal2.setZero();
+    FlocalVelo.setZero();
+    FlocalPres.setZero();
     force[0] = 0.0;    force[1] = 0.0;
 
     for(gp=0; gp<nGP; gp++)
@@ -203,8 +200,8 @@ double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<dou
 
           for(ii=0; ii<9; ii++)
           {
-            //xx += xNode[ii]*N(ii);
-            //yy += yNode[ii]*N(ii);
+            //xx += xNode[ii]*N[ii];
+            //yy += yNode[ii]*N[ii];
 
             TI   = nodeNums[ii]*2;
             TIp1 = TI+1;
@@ -212,37 +209,37 @@ double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<dou
             b1 = veloVec[TI];
             b2 = veloVec[TIp1];
 
-            velo[0]    +=  b1*Nv[gp](ii);
-            velo[1]    +=  b2*Nv[gp](ii);
+            velo[0]    +=  b1*Nv[gp][ii];
+            velo[1]    +=  b2*Nv[gp][ii];
 
             //b1 = 1.5*veloVec[TI]-0.5*veloVecPrev[TI];
             //b2 = 1.5*veloVec[TIp1]-0.5*veloVecPrev[TIp1];
 
-            grad(0,0) += b1*dNvdx[gp](ii);
-            grad(0,1) += b1*dNvdy[gp](ii);
-            grad(1,0) += b2*dNvdx[gp](ii);
-            grad(1,1) += b2*dNvdy[gp](ii);
+            grad(0,0) += b1*dNvdx[gp][ii];
+            grad(0,1) += b1*dNvdy[gp][ii];
+            grad(1,0) += b2*dNvdx[gp][ii];
+            grad(1,1) += b2*dNvdy[gp][ii];
 
-            //veloPrev[0] += veloVecPrev[TI]*Nv[gp](ii);
-            //veloPrev[1] += veloVecPrev[TIp1]*Nv[gp](ii);
+            //veloPrev[0] += veloVecPrev[TI]*Nv[gp][ii];
+            //veloPrev[1] += veloVecPrev[TIp1]*Nv[gp][ii];
 
             //b1 = veloDotVec[TI];
             //b2 = veloDotVec[TIp1];
 
-            //veloDot[0]    +=  b1*Nv[gp](ii);
-            //veloDot[1]    +=  b2*Nv[gp](ii);
+            //veloDot[0]    +=  b1*Nv[gp][ii];
+            //veloDot[1]    +=  b2*Nv[gp][ii];
           }
 
           pres = 0.0;
           //dp[0] = dp[1] = 0.0;
           for(ii=0; ii<4; ii++)
           {
-            //pres += (1.5*presVec[nodeNums[ii]]-0.5*presVecPrev[nodeNums[ii]])*Np[gp](ii);
+            //pres += (1.5*presVec[nodeNums[ii]]-0.5*presVecPrev[nodeNums[ii]])*Np[gp][ii];
             b1 = presVec[nodeNums[ii]];
 
-            pres  += b1*Np[gp](ii);
-            //dp[0] += b1*dNpdx[gp](ii);
-            //dp[1] += b1*dNpdy[gp](ii);
+            pres  += b1*Np[gp][ii];
+            //dp[0] += b1*dNpdx[gp][ii];
+            //dp[1] += b1*dNpdy[gp][ii];
           }
 
           //fact = 2.0*mu*(grad(0,0)+grad(1,1))/3.0;
@@ -279,18 +276,18 @@ double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<dou
             TI   = ii*2;
             TIp1 = TI+1;
 
-            b1 = dNvdx[gp](ii)*elemVolGP[gp];
-            b2 = dNvdy[gp](ii)*elemVolGP[gp];
-            b4 = Nv[gp](ii)*elemVolGP[gp];
+            b1 = dNvdx[gp][ii]*elemVolGP[gp];
+            b2 = dNvdy[gp][ii]*elemVolGP[gp];
+            b4 = Nv[gp][ii]*elemVolGP[gp];
 
-            Flocal1(TI)   += (b4*resi[0] - b1*stress(0,0) - b2*stress(0,1));
-            Flocal1(TIp1) += (b4*resi[1] - b1*stress(1,0) - b2*stress(1,1));
+            FlocalVelo(TI)   += (b4*resi[0] - b1*stress(0,0) - b2*stress(0,1));
+            FlocalVelo(TIp1) += (b4*resi[1] - b1*stress(1,0) - b2*stress(1,1));
 
             //Da = (velo[0]*b1 + velo[1]*b2)*tau;
 
             // SUPG stabilisation terms
-            //Flocal1(TI)   -= Da*rStab[0];
-            //Flocal1(TIp1) -= Da*rStab[1];
+            //FlocalVelo(TI)   -= Da*rStab[0];
+            //FlocalVelo(TIp1) -= Da*rStab[1];
           }
 
           //v_conv = sqrt(veloPrev[0]*veloPrev[0]+veloPrev[1]*veloPrev[1]);
@@ -307,7 +304,7 @@ double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<dou
 
           for(ii=0; ii<4; ii++)
           {
-            Flocal2(ii) += Np[gp](ii)*fact;
+            FlocalPres[ii] += Np[gp][ii]*fact;
           }
 
           //dtCric = min(dtCric, charlen/(v_conv+sqrt(v_conv*v_conv+beta*beta)));
@@ -323,7 +320,7 @@ double  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo1(vector<vector<dou
 
 
 
-int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& veloPrev, VectorXd& veloDotPrev, VectorXd& presPrev, VectorXd&  Flocal2)
+int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(const vector<vector<double> >& node_coords, const double* elemData, const double* timeData, const VectorXd& veloPrev, const VectorXd& veloDotPrev, const VectorXd& presPrev, VectorXd&  FlocalPres)
 {
       double  velo[2], grad[2][2];
       double  xx, yy, fact, fact2, b1, b2, v_conv;
@@ -344,7 +341,7 @@ int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(vector<vector<double
       double  timefact = timeData[2];
 
       //loop over Gauss points and compute element residual
-      Flocal2.setZero();
+      FlocalPres.setZero();
 
       for(gp=0; gp<nGP; gp++)
       {
@@ -355,8 +352,8 @@ int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(vector<vector<double
 
           for(ii=0; ii<9; ii++)
           {
-            //xx += xNode[ii]*N(ii);
-            //yy += yNode[ii]*N(ii);
+            //xx += xNode[ii]*N[ii];
+            //yy += yNode[ii]*N[ii];
 
             TI   = nodeNums[ii]*2;
             TIp1 = TI+1;
@@ -364,11 +361,11 @@ int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(vector<vector<double
             b1 = veloPrev[TI];
             b2 = veloPrev[TIp1];
 
-            velo[0]    +=  b1*Nv[gp](ii);
-            velo[1]    +=  b2*Nv[gp](ii);
+            velo[0]    +=  b1*Nv[gp][ii];
+            velo[1]    +=  b2*Nv[gp][ii];
 
-            grad[0][0] += b1*dNvdx[gp](ii);
-            grad[1][1] += b2*dNvdy[gp](ii);
+            grad[0][0] += b1*dNvdx[gp][ii];
+            grad[1][1] += b2*dNvdy[gp][ii];
           }
 
           v_conv = sqrt(velo[0]*velo[0]+velo[1]*velo[1]);
@@ -380,7 +377,7 @@ int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(vector<vector<double
 
           for(ii=0; ii<4; ii++)
           {
-            Flocal2(ii) += Np[gp](ii)*fact;
+            FlocalPres[ii] += Np[gp][ii]*fact;
           }
       }
 
@@ -390,7 +387,7 @@ int  BernsteinElem2DINSQuad9Node::ResidualIncNavStokesAlgo2(vector<vector<double
 
 
 
-double  BernsteinElem2DINSQuad9Node::calcCriticalTimeStep(double* elemData, double* timeData, VectorXd&  veloVec)
+double  BernsteinElem2DINSQuad9Node::calcCriticalTimeStep(const double* elemData, const double* timeData, const VectorXd&  veloVec)
 {
     int ii, jj, gp, TI, TIp1;
 
@@ -407,8 +404,8 @@ double  BernsteinElem2DINSQuad9Node::calcCriticalTimeStep(double* elemData, doub
           velo[0] = velo[1] = 0.0;
           for(ii=0; ii<nlbf; ii++)
           {
-            //xx += xNode[ii]*N(ii);
-            //yy += yNode[ii]*N(ii);
+            //xx += xNode[ii]*N[ii];
+            //yy += yNode[ii]*N[ii];
 
             TI   = nodeNums[ii]*2;
             TIp1 = TI+1;
@@ -416,8 +413,8 @@ double  BernsteinElem2DINSQuad9Node::calcCriticalTimeStep(double* elemData, doub
             b1 = veloVec[TI];
             b2 = veloVec[TIp1];
 
-            velo[0]  +=  b1*Nv[gp](ii);
-            velo[1]  +=  b2*Nv[gp](ii);
+            velo[0]  +=  b1*Nv[gp][ii];
+            velo[1]  +=  b2*Nv[gp][ii];
           }
 
           v_conv = sqrt(velo[0]*velo[0]+velo[1]*velo[1]);
@@ -486,15 +483,15 @@ int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(vector<vector<double> >& 
 
           for(ii=0; ii<6; ii++)
           {
-            xx += xNode[ii]*Nv[gp](ii);
-            yy += yNode[ii]*Nv[gp](ii);
+            xx += xNode[ii]*Nv[gp][ii];
+            yy += yNode[ii]*Nv[gp][ii];
 
             b1 = solnCur[nodeNums[ii]];
 
-            val  +=  b1*Nv[gp](ii);
+            val  +=  b1*Nv[gp][ii];
 
-            grad(0) += b1*dNvdx[gp](ii);
-            grad(1) += b1*dNvdy[gp](ii);
+            grad(0) += b1*dNvdx[gp][ii];
+            grad(1) += b1*dNvdy[gp][ii];
           }
 
           // this is pseudo-stress
@@ -517,7 +514,7 @@ int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(vector<vector<double> >& 
                Klocal(ii, jj) += ( b5*dNvdx[gp](jj)+b6*dNvdy[gp](jj) );
              }
 
-             Flocal(ii)  += (b4*force - b1*grad(0) - b2*grad(1) );
+             Flocal[ii]  += (b4*force - b1*grad(0) - b2*grad(1) );
           }
 
     }//gp
@@ -532,7 +529,7 @@ int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(vector<vector<double> >& 
 
 // Mass is assumed to be lumped.
 // So, it is stored as a vector of diagonal vector
-int BernsteinElem2DINSQuad9Node::MassMatrices(vector<vector<double> >& node_coords, double* elemData, VectorXd&  Mlocal1, VectorXd&  Mlocal2)
+int BernsteinElem2DINSQuad9Node::MassMatrices(const vector<vector<double> >& node_coords, const double* elemData, VectorXd&  Mlocal1, VectorXd&  Mlocal2)
 {
     int  ii;
 
@@ -544,7 +541,7 @@ int BernsteinElem2DINSQuad9Node::MassMatrices(vector<vector<double> >& node_coor
 
     for(ii=0; ii<9; ii++)
     {
-      Mlocal1(ii) = fact;
+      Mlocal1[ii] = fact;
     }
 
     // Mass Matrix for the Pressure DOF
@@ -552,7 +549,7 @@ int BernsteinElem2DINSQuad9Node::MassMatrices(vector<vector<double> >& node_coor
 
     for(ii=0; ii<4; ii++)
     {
-      Mlocal2(ii) = fact;
+      Mlocal2[ii] = fact;
     }
 
     return 0;
@@ -560,7 +557,7 @@ int BernsteinElem2DINSQuad9Node::MassMatrices(vector<vector<double> >& node_coor
 
 
 //
-int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& solnCur, MatrixXd& Klocal, VectorXd& Flocal, double timeCur)
+int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(const vector<vector<double> >& node_coords, const double* elemData, const double* timeData, const VectorXd& solnCur, MatrixXd& Klocal, VectorXd& Flocal, double timeCur)
 {
     // Fully-implicit formulation
 
@@ -608,8 +605,8 @@ int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(vector<vector<double> >& 
           pres = 0.0;
           for(ii=0; ii<npElem; ii++)
           {
-            xx += xNode[ii]*Nv[gp](ii);
-            yy += yNode[ii]*Nv[gp](ii);
+            xx += xNode[ii]*Nv[gp][ii];
+            yy += yNode[ii]*Nv[gp][ii];
 
             TI   = nodeNums[ii]*3;
             TIp1 = TI+1;
@@ -619,18 +616,18 @@ int  BernsteinElem2DINSQuad9Node::StiffnessAndResidual(vector<vector<double> >& 
             b2 = solnCur[TIp1];
             b3 = solnCur[TIp2];
 
-            vel[0]    +=  b1*Nv[gp](ii);
-            vel[1]    +=  b2*Nv[gp](ii);
+            vel[0]    +=  b1*Nv[gp][ii];
+            vel[1]    +=  b2*Nv[gp][ii];
 
-            grad(0,0) += b1*dNvdx[gp](ii);
-            grad(0,1) += b1*dNvdy[gp](ii);
-            grad(1,0) += b2*dNvdx[gp](ii);
-            grad(1,1) += b2*dNvdy[gp](ii);
+            grad(0,0) += b1*dNvdx[gp][ii];
+            grad(0,1) += b1*dNvdy[gp][ii];
+            grad(1,0) += b2*dNvdx[gp][ii];
+            grad(1,1) += b2*dNvdy[gp][ii];
           }
 
           for(ii=0; ii<4; ii++)
           {
-            pres += solnCur[nodeNums[ii]*3+2]*Np[gp](ii);
+            pres += solnCur[nodeNums[ii]*3+2]*Np[gp][ii];
           }
 
           velDot(0) = 0.0;
@@ -737,7 +734,7 @@ int BernsteinElem2DINSQuad9Node::calcLoadVector(VectorXd& Flocal)
 
 
 //
-double  BernsteinElem2DINSQuad9Node::CalculateError(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& veloPrev, VectorXd& veloDotPrev, VectorXd& presPrev, double timeCur, int index)
+double  BernsteinElem2DINSQuad9Node::CalculateError(const vector<vector<double> >& node_coords, const double* elemData, const double* timeData, const VectorXd& veloPrev, const VectorXd& veloDotPrev, const VectorXd& presPrev, double timeCur, int index)
 {
     double  b1, b2, b3, b4, fact, elemError;
     double  valNum[3], valExact[3], dp[2], gradNum[4], gradExact[4];
@@ -771,8 +768,8 @@ double  BernsteinElem2DINSQuad9Node::CalculateError(vector<vector<double> >& nod
 
           for(ii=0; ii<npElem; ii++)
           {
-            xx += xNode[ii]*Nv[gp](ii);
-            yy += yNode[ii]*Nv[gp](ii);
+            xx += xNode[ii]*Nv[gp][ii];
+            yy += yNode[ii]*Nv[gp][ii];
 
             TI   = nodeNums[ii]*3;
             TIp1 = TI+1;
@@ -782,19 +779,19 @@ double  BernsteinElem2DINSQuad9Node::CalculateError(vector<vector<double> >& nod
             b2 = veloPrev[TIp1];
             b3 = veloPrev[TIp2];
 
-            valNum[0]  +=  b1*Nv[gp](ii);
-            valNum[1]  +=  b2*Nv[gp](ii);
-            valNum[2]  +=  b3*Np[gp](ii);
+            valNum[0]  +=  b1*Nv[gp][ii];
+            valNum[1]  +=  b2*Nv[gp][ii];
+            valNum[2]  +=  b3*Np[gp][ii];
 
-            gradNum[0] += b1*dNvdx[gp](ii);
-            gradNum[2] += b1*dNvdy[gp](ii);
-            gradNum[1] += b2*dNvdx[gp](ii);
-            gradNum[3] += b2*dNvdy[gp](ii);
+            gradNum[0] += b1*dNvdx[gp][ii];
+            gradNum[2] += b1*dNvdy[gp][ii];
+            gradNum[1] += b2*dNvdx[gp][ii];
+            gradNum[3] += b2*dNvdy[gp][ii];
           }
 
           //valNum[2] = 0.0;
           //for(ii=0; ii<3; ii++)
-            //valNum[2] += veloPrev[nodeNums[ii]*3+2]*Np[gp](ii);
+            //valNum[2] += veloPrev[nodeNums[ii]*3+2]*Np[gp][ii];
 
           if(index < 3)
           {
@@ -872,15 +869,15 @@ double  BernsteinElem2DINSQuad9Node::CalculateError(vector<vector<double> >& nod
           gradNum[0] = gradNum[1] = gradNum[2] = gradNum[3] = 0.0;
           for(ii=0; ii<6; ii++)
           {
-            xx += xNode[ii]*Nv[gp](ii);
-            yy += yNode[ii]*Nv[gp](ii);
+            xx += xNode[ii]*Nv[gp][ii];
+            yy += yNode[ii]*Nv[gp][ii];
 
             b1 = veloPrev[nodeNums[ii]];
 
-            valNum[0]  +=  b1*Nv[gp](ii);
+            valNum[0]  +=  b1*Nv[gp][ii];
 
-            gradNum[0] += b1*dNvdx[gp](ii);
-            gradNum[1] += b1*dNvdy[gp](ii);
+            gradNum[0] += b1*dNvdx[gp][ii];
+            gradNum[1] += b1*dNvdy[gp][ii];
           }
 
           valExact[0] = analy.computeValue(index, xx, yy, timeCur);
@@ -914,7 +911,7 @@ double  BernsteinElem2DINSQuad9Node::CalculateError(vector<vector<double> >& nod
 
 
 
-int BernsteinElem2DINSQuad9Node::toComputeInfSupCondition(vector<vector<double> >& node_coords, double* elemData, MatrixXd& Kuu, MatrixXd& Kup, MatrixXd& Kpp)
+int BernsteinElem2DINSQuad9Node::toComputeInfSupCondition(const vector<vector<double> >& node_coords, const double* elemData, MatrixXd& Kuu, MatrixXd& Kup, MatrixXd& Kpp)
 {
 //
 //  printStiffnessMatrix();

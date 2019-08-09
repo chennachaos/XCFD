@@ -10,7 +10,6 @@
 */
 
 
-#include "headersVTK.h"
 #include "headersBasic.h"
 #include "headersEigen.h"
 #include "ExplicitCFD.h"

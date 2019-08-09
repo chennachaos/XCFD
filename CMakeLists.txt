@@ -17,7 +17,7 @@ enable_language(CXX)
 
 set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 
-set(COPT "-w -std=c++11 -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math")
+set(COPT "-w -std=c++11 -g -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")

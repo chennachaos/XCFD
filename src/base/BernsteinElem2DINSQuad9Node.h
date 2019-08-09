@@ -16,23 +16,23 @@ class  BernsteinElem2DINSQuad9Node : public ElementBase
 
     virtual ~BernsteinElem2DINSQuad9Node();
 
-    void prepareElemData(vector<vector<double> >& node_coods);
+    void prepareElemData(const vector<vector<double> >& node_coods);
 
-    virtual double calcCriticalTimeStep(double* elemData, double* timeData, VectorXd&  veloVec);
+    virtual double calcCriticalTimeStep(const double* elemData, const double* timeData, const VectorXd&  veloVec);
 
     virtual int calcLoadVector(VectorXd& Flocal);
 
-    virtual int MassMatrices(vector<vector<double> >& node_coods, double* elemData, VectorXd&  Mlocal1, VectorXd&  Mlocal2);
+    virtual int MassMatrices(const vector<vector<double> >& node_coods, const double* elemData, VectorXd&  Mlocal1, VectorXd&  Mlocal2);
 
-    virtual double  ResidualIncNavStokesAlgo1(vector<vector<double> >& node_coods, double* elemData, double* timeData, VectorXd& veloVec, VectorXd& veloVecPrev, VectorXd& veloDotVec, VectorXd& veloDotVecPrev, VectorXd& presVec, VectorXd& presVecPrev, VectorXd&  Flocal1, VectorXd&  Flocal2, double timeCur);
+    virtual double  ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, VectorXd&  FlocalVelo, VectorXd&  FlocalPres, double timeCur);
 
-    virtual int  ResidualIncNavStokesAlgo2(vector<vector<double> >& node_coods, double* elemData, double* timeData, VectorXd& veloCur, VectorXd& acceCur, VectorXd& presCur, VectorXd&  Flocal2);
+    virtual int  ResidualIncNavStokesAlgo2(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloCur, const VectorXd& veloDotCur, const VectorXd& presCur, VectorXd&  Flocal2);
 
-    virtual double CalculateError(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& veloPrev, VectorXd& veloDotPrev, VectorXd& presPrev, double timeCur, int index);
+    virtual double CalculateError(const vector<vector<double> >& node_coords, const double* elemData, const double* timeData, const VectorXd& veloPrev, const VectorXd& veloDotPrev, const VectorXd& presPrev, double timeCur, int index);
 
-    virtual int  StiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& solnCur, MatrixXd& Klocal, VectorXd& Flocal, double timeCur);
+    virtual int  StiffnessAndResidual(const vector<vector<double> >& node_coords, const double* elemData, const double* timeData, const VectorXd& solnCur, MatrixXd& Klocal, VectorXd& Flocal, double timeCur);
 
-    virtual int toComputeInfSupCondition(vector<vector<double> >& node_coords, double* elemData, MatrixXd& Kuu, MatrixXd& Kup, MatrixXd& Kpp);
+    virtual int toComputeInfSupCondition(const vector<vector<double> >& node_coords, const double* elemData, MatrixXd& Kuu, MatrixXd& Kup, MatrixXd& Kpp);
 };
 
 

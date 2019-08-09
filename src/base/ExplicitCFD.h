@@ -178,6 +178,7 @@ class ExplicitCFD
         ///////////////////////////////////////////////////////////
 
         void  postProcess();
+        void  postProcessVTKlegacy();
 };
 
 

@@ -1,0 +1,63 @@
+cmake_minimum_required(VERSION 2.6)
+project(xcfd)
+
+enable_language(CXX)
+
+
+##################################
+# compiler options
+##################################
+
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+#set(CMAKE_CXX_COMPILER "/jmain01/apps/pgi/18.4/linux86-64/18.4/bin/pgc++")
+
+set(COPT "-w -std=c++11 -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
+
+#set(COPT "-w -std=c++11 -O3 -DVTK_LEGACY_FORMAT")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
+
+
+##################################
+# include directories
+##################################
+include_directories(
+src/base
+#/usr/include/c++/7 
+/jmain01/home/JAD044/txk15/cck88-txk15/projects/eigen-eigen-323c052e1731 
+/jmain01/home/JAD044/txk15/cck88-txk15/projects/eigen-eigen-323c052e1731/unsupported 
+)
+
+
+
+##################################
+# lib directories
+##################################
+link_directories(
+#/usr/lib/libblas
+#/usr/lib/lapack 
+/usr/lib 
+)
+
+
+
+##################################
+# source files
+##################################
+
+
+file(GLOB sources1 src/base/*.h)
+file(GLOB sources2 src/base/*.cpp)
+
+##################################
+##################################
+
+add_executable(incexplicitSerial       src/incexplicitSerial.cpp ${sources1} ${sources2})
+
+target_link_libraries(incexplicitSerial stdc++ m)
+
+
+#install(TARGETS incexplicitSerial       RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
+install(TARGETS incexplicitSerial       RUNTIME DESTINATION /jmain01/home/JAD044/txk15/cck88-txk15/projects/XCFD/bin)
+
+

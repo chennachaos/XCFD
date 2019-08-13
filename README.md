@@ -14,6 +14,7 @@ Explicit scheme for CFD using a new finite element scheme. At the moment limited
   * Change the paths to the compilers, Eigen and VTK libraries.
   * Change the path to *bin*.
 * Run the following commands (from the repository folder)
+  * `mkdir build`
   * `cd build`
   * `cmake ..`
   * `make install`

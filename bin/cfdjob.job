@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Set the name of the job
+# (this gets displayed when you get a list of jobs on the cluster)
+#SBATCH --job-name="cfdinc"
+#SBATCH --output=explcfd.out.%J
+
+# Specify the maximum wall clock time your job can use
+# (Your job will be killed if it exceeds this)
+#SBATCH --time=1:00:00
+
+# Specify the number of cpu cores your job requires
+#SBATCH --ntasks=1
+
+# Specify the amount of memory your job needs per cpu-core (in Mb)
+# (Your job will be killed if it exceeds this for a significant length of time)
+##SBATCH --mem-per-cpu=2000
+
+#SBATCH --partition=small
+
+# set number of GPUs
+#SBATCH --gres=gpu:1
+
+
+# Set up the environment
+module purge
+module load gcc7/7.3.0
+
+#export OMP_NUM_THREADS=10
+
+# Run the application
+echo My job is started
+
+#./incexplicitSerial LDC-T6-nel1000
+#./incexplicitSerial LDCT6-stru-meshB
+
+python3 test-LDCT6-stru-meshB-Re1000.py
+
+echo My job has finished
+
+

@@ -11,9 +11,7 @@ inpfile = "LDCT6-stru-meshB"
 conv_data_ref = "convergence-data-LDCT6-stru-meshB-Re1000.dat"
 
 print("Started the simulation \n")
-#print("Check 'simulation.log' for progress \n")
 
-#cmd="./incexplicitSerial  " + inpfile + "  >  simulation.log"
 cmd="./incexplicitSerial  " + inpfile
 
 os.system(cmd)

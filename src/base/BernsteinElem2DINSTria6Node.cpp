@@ -105,7 +105,7 @@ void BernsteinElem2DINSTria6Node::prepareElemData(const vector<vector<double> >&
       {
         cout << " Negative Jacobian in 'BernsteinElem2DINSTria6Node::prepareElemData' " << endl;
         cout << " Jac = " << Jac << endl;
-        exit[1];
+        exit(1);
       }
 
       dvol = gwts[gp]*Jac;

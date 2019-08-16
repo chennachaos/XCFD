@@ -4,7 +4,6 @@
 
 #include "ElementBase.h"
 #include "headersBasic.h"
-#include "headersEigen.h"
 #include "SolutionData.h"
 
 class  BernsteinElem3DINSTetra10Node : public ElementBase

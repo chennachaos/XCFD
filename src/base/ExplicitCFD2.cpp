@@ -2,16 +2,12 @@
 #include "ExplicitCFD.h"
 #include "elementutilitiescfd.h"
 #include "ElementBase.h"
-//#include "SolutionData.h"
 #include <chrono>
 
 
 
 void ExplicitCFD::setSolver(int slv, int *parm, bool cIO)
 {
-    //Eigen::initParallel();
-    Eigen::setNbThreads(0);
-
     prepareMatrixPattern();
 
     calcMassMatrixForExplicitDynamics();
@@ -264,7 +260,7 @@ void ExplicitCFD::addExternalForces(double loadFact)
     double specVal=0.0;
 
     VectorXd  vecTemp, Flocal;
-    vecTemp.setZero();
+    setZero(vecTemp);
 
     // specified nodal forces
     for(ii=0;ii<nodeForcesData.size();++ii)
@@ -296,8 +292,8 @@ int ExplicitCFD::calcMassMatrixForExplicitDynamics()
     // Compute global mass matrices
     //The Mass is assumed to be lumped so that the mass matrix is diagonal
 
-    globalMassVelo.setZero();
-    globalMassPres.setZero();
+    setZero(globalMassVelo);
+    setZero(globalMassPres);
 
     for(ee=0; ee<nElem; ++ee)
     {
@@ -332,6 +328,7 @@ int ExplicitCFD::calcMassMatrixForExplicitDynamics()
 
 int  ExplicitCFD::solveExplicitStepDTS()
 {
+/*
     calcMassMatrixForExplicitDynamics();
 
     cout << " Solving the ExplicitCFD " << endl;
@@ -542,13 +539,13 @@ int  ExplicitCFD::solveExplicitStepDTS()
 
           postProcess();
 
-          TotalForce.setZero();
+          setZero(TotalForce);
           for(ii=0; ii<outputEdges.size(); ++ii)
           {
             elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);
           }
 
-          fact1 = TotalForce(0);  fact2 = TotalForce(1);
+          fact1 = TotalForce[0];  fact2 = TotalForce[1];
 
           fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
           fout_convdata << '\t' << fact1 << '\t' << fact2 << endl;
@@ -571,7 +568,7 @@ int  ExplicitCFD::solveExplicitStepDTS()
         timeNow = timeNow + dt;
 
       } //Time loop
-
+*/
 
     return 0;
 }

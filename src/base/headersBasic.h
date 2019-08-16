@@ -27,6 +27,8 @@ using namespace std;
 
 const double PI = 3.141592653589793238462643383279502884197169399375105;
 
+typedef vector<double> VectorXd;
+typedef vector<vector<double> > MatrixXd;
 
 
 template<typename T>

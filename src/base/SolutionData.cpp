@@ -1,7 +1,7 @@
 
 #include "SolutionData.h"
 #include "headersBasic.h"
-
+#include "elementutilitiescfd.h"
 
 SolutionData::SolutionData()
 {
@@ -21,7 +21,7 @@ void SolutionData::initialise()
   int ind=nNode_Velo*ndim;
 
   velo.resize(ind);
-  velo.setZero();
+  setZero(velo);
 
   veloPrev  = velo;
   veloCur   = velo;
@@ -33,7 +33,7 @@ void SolutionData::initialise()
   acceCur  = veloDot;
 
   pres.resize(nNode_Pres);
-  pres.setZero();
+  setZero(pres);
 
   presPrev  = pres;
   presPrev2 = pres;
@@ -270,16 +270,16 @@ void  SolutionData::applyDirichletBCs(double fact)
           {
             jj = n1*2+n2;
 
-            velo(jj) = DirichletBCs[ii][2]*fact;
+            velo[jj] = DirichletBCs[ii][2]*fact;
 
             //xx = node_coords[n1][0];
             //yy = node_coords[n1][1];
             //if(n2 == 0)
-              //velo(jj) = -cos(xx)*sin(yy)*sin(2.0*timeNow) ;
+              //velo[jj] = -cos(xx)*sin(yy)*sin(2.0*timeNow) ;
             //else
-              //velo(jj) =  sin(xx)*cos(yy)*sin(2.0*timeNow) ;
+              //velo[jj] =  sin(xx)*cos(yy)*sin(2.0*timeNow) ;
 
-            veloDot(jj) = (velo(jj)-veloPrev(jj))/(gamm*dt) - (1.0-gamm)*veloDotPrev(jj)/gamm;
+            veloDot[jj] = (velo[jj]-veloPrev[jj])/(gamm*dt) - (1.0-gamm)*veloDotPrev[jj]/gamm;
           }
         }
   return;
@@ -317,9 +317,9 @@ void  SolutionData::solve()
 
             if( midNodeData[jj][0] == 0 )
             {
-              presDot(jj) = rhsVecPres(jj)/(am*globalMassPres(jj)) - (1.0-am)*presDotPrev(jj)/am;
+              presDot[jj] = rhsVecPres[jj]/(am*globalMassPres[jj]) - (1.0-am)*presDotPrev[jj]/am;
 
-              pres(jj)    = presPrev(jj) + dt*(gamm*presDot(jj)+(1.0-gamm)*presDotPrev(jj));
+              pres[jj]    = presPrev[jj] + dt*(gamm*presDot[jj]+(1.0-gamm)*presDotPrev[jj]);
             }
           }
 */

@@ -434,59 +434,48 @@ void ExplicitCFD::prepareInputData()
     ind = nNode_Velo*ndim;
     globalMassVelo.resize(ind);
     rhsVecVelo.resize(ind);
-    rhsVecVelo.setZero();
+    setZero(rhsVecVelo);
     rhsVecVelo2 = rhsVecVelo;
 
 
     globalMassPres.resize(nNode_Pres);
     rhsVecPres.resize(nNode_Pres);
-    rhsVecPres.setZero();
+    setZero(rhsVecPres);
     rhsVecPres2 = rhsVecPres;
 
 
     ind = nNode_Velo*ndim;
 
     velo.resize(ind);
-    velo.setZero();
+    setZero(velo);
 
     veloPrev  = velo;
     //veloCur   = velo;
     veloPrev2 = velo;
     //veloPrev3 = velo;
     veloApplied = velo;
+    veloDiff    = velo;
 
     veloDot     = velo;
     veloDotPrev = veloDot;
     //veloDotCur  = veloDot;
 
     pres.resize(nNode_Pres);
-    pres.setZero();
+    setZero(pres);
 
     presPrev  = pres;
     presPrev2 = pres;
     //presPrev3 = pres;
     //presCur   = pres;
     presApplied = pres;
+    presDiff    = pres;
 
     presDot     = velo;
     presDotPrev = pres;
     //presDotCur  = pres;
 
-    /*
-    veloM    = velo;
-    veloMp1  = velo;
-    veloDotM    = velo;
-    veloDotMp1  = velo;
-
-    presM      = pres;
-    presMp1    = pres;
-    presDotM   = pres;
-    presDotMp1 = pres;
-    */
-
-
     soln.resize(nNode*ndof);
-    soln.setZero();
+    setZero(soln);
 
     solnInit = soln;
 
@@ -521,7 +510,7 @@ void ExplicitCFD::prepareInputData()
 
     Kovasznay analy;
 
-    veloApplied.setZero();
+    setZero(veloApplied);
     for(ii=0; ii<nDBC_Velo; ++ii)
     {
         n1 = DirichletBCsVelo[ii][0];
@@ -546,14 +535,14 @@ void ExplicitCFD::prepareInputData()
 
         if( midNodeData[nn][0] )
         {
-          fact = 0.25*veloApplied(midNodeData[nn][1]*ndim+dof) + 0.25*veloApplied(midNodeData[nn][2]*ndim+dof);
+          fact = 0.25*veloApplied[midNodeData[nn][1]*ndim+dof] + 0.25*veloApplied[midNodeData[nn][2]*ndim+dof];
 
-          veloApplied[nn*ndim+dof] = 2.0*(veloApplied(nn*ndim+dof) - fact);
+          veloApplied[nn*ndim+dof] = 2.0*(veloApplied[nn*ndim+dof] - fact);
         }
     }
     //printVector(solnApplied);
 
-    presApplied.setZero();
+    setZero(presApplied);
     for(ii=0; ii<nDBC_Pres; ++ii)
     {
         n1 = DirichletBCsPres[ii][0];
@@ -699,10 +688,10 @@ void ExplicitCFD::setInitialConditions()
         //yy = node_coords[ii][1];
         //zz = node_coords[ii][2];
 
-        //veloPrev(ii*2) = 2.0*yy*(3.0-yy)/3.0;
-        veloPrev(ii*ndim) = 1.0;
+        //veloPrev[ii*2] = 2.0*yy*(3.0-yy)/3.0;
+        veloPrev[ii*ndim] = 1.0;
 
-        //veloPrev(ii*ndim) = 16.0*0.45*yy*zz*(0.41-yy)*(0.41-zz)/0.41/0.41/0.41/0.41;
+        //veloPrev[ii*ndim] = 16.0*0.45*yy*zz*(0.41-yy)*(0.41-zz)/0.41/0.41/0.41/0.41;
     }
     velo = veloPrev;
 
@@ -750,14 +739,14 @@ int  ExplicitCFD::solveExplicitStep()
     ///////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////
 
-    velo.setZero();      veloPrev.setZero();      veloCur.setZero();
-    veloDot.setZero();   veloDotPrev.setZero();   veloDotCur.setZero();
-    pres.setZero();      presPrev.setZero();      presCur.setZero();
-    presDot.setZero();   presDotPrev.setZero();   presDotCur.setZero();
+    setZero(velo);      setZero(veloPrev);      setZero(veloCur);
+    setZero(veloDot);   setZero(veloDotPrev);   setZero(veloDotCur);
+    setZero(pres);      setZero(presPrev);      setZero(presCur);
+    setZero(presDot);   setZero(presDotPrev);   setZero(presDotCur);
 
     int  stepsCompleted=0;
-    int  nsize_velo = rhsVecVelo.rows();
-    int  nsize_pres = rhsVecPres.rows();
+    int  nsize_velo = rhsVecVelo.size();
+    int  nsize_pres = rhsVecPres.size();
     int  aa, bb, dd, ee, ii, jj, kk, count, row, col, ind;
 
 
@@ -794,8 +783,8 @@ int  ExplicitCFD::solveExplicitStep()
         }
         //timeFact = 1.0;
 
-        rhsVecVelo.setZero();
-        rhsVecPres.setZero();
+        setZero(rhsVecVelo);
+        setZero(rhsVecPres);
 
         //Loop over elements and compute the RHS and time step
         fact = timeNow - dt;
@@ -811,7 +800,7 @@ int  ExplicitCFD::solveExplicitStep()
               kk = ndim*elemConn[ee][ii];
 
               for(dd=0; dd<ndim; dd++)
-                rhsVecVelo[kk+dd] += FlocalVelo(jj+dd);
+                rhsVecVelo[kk+dd] += FlocalVelo[jj+dd];
             }
             for(ii=0; ii<npElemPres; ++ii)
             {
@@ -852,8 +841,8 @@ int  ExplicitCFD::solveExplicitStep()
 
         // compute norms
 
-        norm_velo = velo.norm();
-        norm_pres = pres.norm();
+        norm_velo = norm(velo);
+        norm_pres = norm(pres);
 
         if( std::isnan(norm_velo) || std::isnan(norm_pres) )
         {
@@ -862,12 +851,12 @@ int  ExplicitCFD::solveExplicitStep()
           exit(-1);
         }
 
-        veloDiff = velo - veloPrev;
-        norm_velo_diff = veloDiff.norm();
+        subtract2vecs(velo, veloPrev, veloDiff);
+        norm_velo_diff = norm(veloDiff);
         norm_velo = norm_velo_diff/norm_velo;
 
-        presDiff  = pres - presPrev;
-        norm_pres_diff = presDiff.norm();
+        subtract2vecs(pres,  presPrev, presDiff);
+        norm_pres_diff = norm(presDiff);
         norm_pres = norm_pres_diff/norm_pres;
 
         if(stepsCompleted == 0)
@@ -883,7 +872,7 @@ int  ExplicitCFD::solveExplicitStep()
 
           postProcess();
 
-          TotalForce.setZero();
+          setZero(TotalForce);
           for(ii=0; ii<outputEdges.size(); ++ii)
           {
             elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);

@@ -1,6 +1,5 @@
 
 #include "BasisFunctionsBernstein.h"
-#include "headersEigen.h"
 
 #include <math.h>
 #include <cmath>
@@ -9,6 +8,20 @@
 
 using std::vector;
 
+double  norm(vector<double>&  vec)
+{
+    double  val = 0.0;
+    for(int ii=0;ii<vec.size();ii++)
+        val += vec[ii]*vec[ii];
+
+   return sqrt(val);
+}
+
+void  subtract2vecs(const vector<double>&  vec1, const vector<double>&  vec2, vector<double>&  vec)
+{
+    for(int ii=0;ii<vec1.size();ii++)
+        vec[ii] = vec1[ii] - vec2[ii];
+}
 
 
 void Bernstein_BasisFuns1D(int p, double xi, double* N, double* dN_dxi)
@@ -458,33 +471,35 @@ void BernsteinBasisFunsFaceTria(int degree, double* param, double *xNode, double
      nlbf = 6;
    }
 
-   Vector3d  du, dv;
    vector<double>  dN1(nlbf), dN2(nlbf);
 
    BernsteinBasisFunsTria(degree, param[0], param[1], N, &dN1[0], &dN2[0]);
 
-   du.setZero();
-   dv.setZero();
+   double  du[3], dv[3];
+   du[0] = du[1] = du[2] = 0.0;
+   dv[0] = dv[1] = dv[2] = 0.0;
    for(ii=0; ii<nlbf; ii++)
    {
-     du(0) += (xNode[ii] * dN1[ii]);
-     du(1) += (yNode[ii] * dN1[ii]);
-     du(2) += (zNode[ii] * dN1[ii]);
+     du[0] += (xNode[ii] * dN1[ii]);
+     du[1] += (yNode[ii] * dN1[ii]);
+     du[2] += (zNode[ii] * dN1[ii]);
 
-     dv(0) += (xNode[ii] * dN2[ii]);
-     dv(1) += (yNode[ii] * dN2[ii]);
-     dv(2) += (zNode[ii] * dN2[ii]);
+     dv[0] += (xNode[ii] * dN2[ii]);
+     dv[1] += (yNode[ii] * dN2[ii]);
+     dv[2] += (zNode[ii] * dN2[ii]);
    }
 
-   Vector3d normal1 = du.cross(dv);
-
-   Jac = normal1.norm();
-   normal1 /= Jac;
-
    // Compute the normal
-   normal[0] = normal1[0];
-   normal[1] = normal1[1];
-   normal[2] = normal1[2];
+   normal[0] = du[1]*dv[2] - du[2]*dv[1];
+   normal[1] = du[2]*dv[0] - du[0]*dv[2];
+   normal[2] = du[0]*dv[1] - du[1]*dv[0];
+
+   Jac = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+
+   // normalise -> unit normal
+   normal[0] /= Jac;
+   normal[1] /= Jac;
+   normal[2] /= Jac;
 
    return;
 }

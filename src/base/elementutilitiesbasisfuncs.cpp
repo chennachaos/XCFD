@@ -11,7 +11,7 @@
 
 #include "BasisFunctionsBernstein.h"
 #include "headersBasic.h"
-#include "headersEigen.h"
+#include "elementutilitiescfd.h"
 
 
 
@@ -124,7 +124,7 @@ int computeBasisFunctions3D(bool flag, int ELEM_TYPE, int degree, double* param,
     vector<double>  N1(count), N2(count), dN1(count), dN2(count), dN3(count);
     vector<double>  dN_du1(nlbf), dN_du2(nlbf), dN_du3(nlbf);
     double  xx, yy, zz, detinv;
-    MatrixXd B(3,3), Binv(3,3) ;
+    double B[3][3], Binv[3][3] ;
 
     if( ELEM_TYPE == 1 )
     {
@@ -138,39 +138,42 @@ int computeBasisFunctions3D(bool flag, int ELEM_TYPE, int degree, double* param,
 
     // Gradient of mapping from parameter space to physical space
 
-    B.setZero();
+    B[0][0] = B[0][1] = B[0][2] = 0.0;
+    B[1][0] = B[1][1] = B[1][2] = 0.0;
+    B[2][0] = B[2][1] = B[2][2] = 0.0;
     for(ii=0; ii<nlbf; ii++)
     {
       xx = xNode[ii];
       yy = yNode[ii];
       zz = zNode[ii];
 
-      B(0,0) +=  (xx * dN_du1[ii]) ;
-      B(1,0) +=  (xx * dN_du2[ii]) ;
-      B(2,0) +=  (xx * dN_du3[ii]) ;
+      B[0][0] +=  (xx * dN_du1[ii]) ;
+      B[1][0] +=  (xx * dN_du2[ii]) ;
+      B[2][0] +=  (xx * dN_du3[ii]) ;
 
-      B(0,1) +=  (yy * dN_du1[ii]) ;
-      B(1,1) +=  (yy * dN_du2[ii]) ;
-      B(2,1) +=  (yy * dN_du3[ii]) ;
+      B[0][1] +=  (yy * dN_du1[ii]) ;
+      B[1][1] +=  (yy * dN_du2[ii]) ;
+      B[2][1] +=  (yy * dN_du3[ii]) ;
 
-      B(0,2) +=  (zz * dN_du1[ii]) ;
-      B(1,2) +=  (zz * dN_du2[ii]) ;
-      B(2,2) +=  (zz * dN_du3[ii]) ;
+      B[0][2] +=  (zz * dN_du1[ii]) ;
+      B[1][2] +=  (zz * dN_du2[ii]) ;
+      B[2][2] +=  (zz * dN_du3[ii]) ;
     }
 
     //printMatrix(B);
 
-    Jac  = B.determinant();
-    Binv = B.inverse();
+    cout <<  " Need to develop a routine for computing the inverse of 3x3 matrix" <<  endl;
+    //Jac  = B.determinant();
+    //Binv = B.inverse();
 
     //printMatrix(Binv);
 
     // Compute derivatives of basis functions w.r.t physical coordinates
     for(ii=0; ii<nlbf; ii++)
     {
-      dN_dx[ii] = dN_du1[ii] * Binv(0,0) + dN_du2[ii] * Binv(0,1) + dN_du3[ii] * Binv(0,2);
-      dN_dy[ii] = dN_du1[ii] * Binv(1,0) + dN_du2[ii] * Binv(1,1) + dN_du3[ii] * Binv(1,2);
-      dN_dz[ii] = dN_du1[ii] * Binv(2,0) + dN_du2[ii] * Binv(2,1) + dN_du3[ii] * Binv(2,2);
+      dN_dx[ii] = dN_du1[ii] * Binv[0][0] + dN_du2[ii] * Binv[0][1] + dN_du3[ii] * Binv[0][2];
+      dN_dy[ii] = dN_du1[ii] * Binv[1][0] + dN_du2[ii] * Binv[1][1] + dN_du3[ii] * Binv[1][2];
+      dN_dz[ii] = dN_du1[ii] * Binv[2][0] + dN_du2[ii] * Binv[2][1] + dN_du3[ii] * Binv[2][2];
     }
 
     return 0;

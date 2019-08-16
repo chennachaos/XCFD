@@ -1,9 +1,9 @@
 #ifndef incl_LagrangeElement_h
 #define incl_LagrangeElement_h
 
-#include "headersEigen.h"
-//#include "SolutionData.h"
-#include <vector>
+#include "headersBasic.h"
+//#include <vector>
+//#include <iostream>
 
 using std::vector;
 using std::cout;
@@ -35,13 +35,11 @@ class ElementBase
     int  elmType, matType, secType, subdomId;
     double  elemVol, charlen, dtCrit;
 
-    //SolutionData  *SolnData;
-
     vector<int>  nodeNums, forAssyVec;
 
     vector<double>  elemVolGP;
 
-    vector<VectorXd>  Nv, dNvdx, dNvdy, dNvdz, Np, dNpdx, dNpdy, dNpdz;
+    vector<VectorXd >  Nv, dNvdx, dNvdy, dNvdz, Np, dNpdx, dNpdy, dNpdz;
 
 
     //member functions

@@ -3,7 +3,6 @@
 #define incl_SolutionData_h
 
 #include "headersBasic.h"
-#include "headersEigen.h"
 
 
 class  SolutionData

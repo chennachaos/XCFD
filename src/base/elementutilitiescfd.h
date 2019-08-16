@@ -3,7 +3,6 @@
 
 
 #include "headersBasic.h"
-#include "headersEigen.h"
 
 
 int  pointInverseTria6node(double* xNode, double* yNode, double* target, double* param);
@@ -11,14 +10,29 @@ int  pointInverseTria6node(double* xNode, double* yNode, double* target, double*
 int  pointInverseTetra10node(double* xNode, double* yNode, double* zNode, double* target, double* param);
 
 
+inline void setZero(MatrixXd& AA)
+{
+    int ii, jj;
+    for(ii=0;ii<AA.size();ii++)
+    {
+        for(jj=0;jj<AA[ii].size();jj++)
+           AA[ii][jj] = 0.0;
+    }
+
+    return;
+}
+
+
+
+
 inline void printMatrix(MatrixXd& AA)
 {
     int ii, jj;
     printf("\n\n");
-    for(ii=0;ii<AA.rows();ii++)
+    for(ii=0;ii<AA.size();ii++)
     {
-        for(jj=0;jj<AA.cols();jj++)
-           printf("\t%14.8f", AA(ii,jj));
+        for(jj=0;jj<AA[ii].size();jj++)
+           printf("\t%14.8f", AA[ii][jj]);
         printf("\n");
     }
     printf("\n\n");
@@ -26,12 +40,24 @@ inline void printMatrix(MatrixXd& AA)
     return;
 }
 
+inline void setZero(VectorXd& AA)
+{
+    for(int ii=0;ii<AA.size();ii++)
+    {
+        AA[ii] = 0.0;
+    }
+
+    return;
+}
+
+
+
 
 inline void printVector(VectorXd& AA)
 {
     printf("\n\n");
-    for(int ii=0;ii<AA.rows();ii++)
-        printf("\t%6d\t%12.8f\n", ii, AA(ii));
+    for(int ii=0;ii<AA.size();ii++)
+        printf("\t%6d\t%12.8f\n", ii, AA[ii]);
     printf("\n\n");
 
    return;
@@ -59,5 +85,13 @@ inline void printVector(double* data, int nn)
 
    return;
 }
+
+
+double  norm(vector<double>&  vec);
+
+void  subtract2vecs(const vector<double>&  vec1, const vector<double>&  vec2, vector<double>&  vec);
+
+
+
 
 #endif

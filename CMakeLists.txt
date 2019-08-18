@@ -28,8 +28,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
 ##################################
 include_directories(
 src/base
-/usr/include/eigen3 
-/usr/include/eigen3/unsupported 
 /usr/include/vtk-6.3 
 )
 

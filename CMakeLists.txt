@@ -15,7 +15,7 @@ enable_language(CXX)
 # compiler options
 ##################################
 
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+set(CMAKE_CXX_COMPILER "g++")
 
 set(COPT "-w -std=c++11 -g -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
 
@@ -28,7 +28,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
 ##################################
 include_directories(
 src/base
-/usr/include/c++/7 
 /usr/include/eigen3 
 /usr/include/eigen3/unsupported 
 /usr/include/vtk-6.3 
@@ -40,8 +39,6 @@ src/base
 # lib directories
 ##################################
 link_directories(
-/usr/lib/gcc/x86_64-linux-gnu/7
-/usr/lib/x86_64-linux-gnu 
 /usr/lib/libblas
 /usr/lib/lapack 
 /usr/lib 

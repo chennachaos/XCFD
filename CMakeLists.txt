@@ -30,19 +30,6 @@ include_directories(
 src/base
 )
 
-
-
-##################################
-# lib directories
-##################################
-link_directories(
-/usr/lib/libblas
-/usr/lib/lapack 
-/usr/lib 
-)
-
-
-
 ##################################
 # source files
 ##################################
@@ -67,7 +54,7 @@ target_link_libraries(incexplicitSerial stdc++ m )
 
 #install(TARGETS infsup                  RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
 #install(TARGETS incimplicit             RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
-install(TARGETS incexplicitSerial       RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
+install(TARGETS incexplicitSerial       RUNTIME DESTINATION bin)
 #install(TARGETS incexplicitParallel     RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
 #install(TARGETS incexplicitdts          RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
 

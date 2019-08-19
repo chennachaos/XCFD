@@ -17,9 +17,11 @@ enable_language(CXX)
 
 
 set(COPTGNU "-w -std=c++11 -fopenmp -g -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
+set(COPTGDB "-w -std=c++11 -g -O0 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
+
 set(COPTPGI "-w -std=c++11 -mp -fast -DVTK_LEGACY_FORMAT")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPTPGI}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPTGDB}")
 
 
 ##################################

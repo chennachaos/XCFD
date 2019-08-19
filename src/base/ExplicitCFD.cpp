@@ -194,6 +194,79 @@ void  ExplicitCFD::readInputData(string&  fname)
       exit(-1);
     }
 
+    // Velocity node -> element,nodeidx 
+    {
+        vector<int> veloNodeConnCount;
+        vector<int> veloNodeConnEindHelper;
+        veloNodeConnCount.reserve(nNode_Velo);
+        for(auto& veloNodeCount : veloNodeConnCount) veloNodeCount = 0;
+        for(auto el : elemConn) 
+            for(auto nodeIdx : el) 
+                veloNodeConnCount[nodeIdx]++;
+
+        // filling nodeConnEind as the scan of nodeCount
+        veloNodeConnEind.reserve(nNode_Velo+1);
+        veloNodeConnEindHelper.reserve(nNode_Velo+1);
+        veloNodeConnEind[0] = 0; 
+        for(int i = 1;i <= nNode_Velo; ++i) 
+            veloNodeConnEind[i] = veloNodeConnEind[i-1] + veloNodeConnCount[i-1];
+        
+        veloNodeConnEindHelper.reserve(nNode_Velo+1);
+        for(auto& veloNodeConnEindElem : veloNodeConnEindHelper)
+            veloNodeConnEindElem = 0;
+
+        // THIS WORKS ON THE ASSUMPTION THAT ALL ELEMENTS HAVE THE SAME 
+        // NUMBER OF NODES
+        
+        veloNodeConn.reserve(nElem*npElemVelo);
+        for(int iEl = 0;iEl<nElem;++iEl) 
+            for(int iNodeLocal = 0; iNodeLocal < npElemVelo; ++iNodeLocal) {
+                int iNode = elemConn[iEl][iNodeLocal];
+                int iNodeIdx = veloNodeConnEind[iNode]+
+                    veloNodeConnEindHelper[iNode];
+                veloNodeConn[iNodeIdx] = iEl*npElemVelo+iNodeLocal;
+                ++veloNodeConnEindHelper[iNode];
+            }
+    }
+
+    // Pressure node -> element,nodeidx 
+    {
+        vector<int> presNodeConnCount;
+        vector<int> presNodeConnEindHelper;
+        presNodeConnCount.reserve(nNode_Pres);
+        for(auto& presNodeCount : presNodeConnCount) presNodeCount = 0;
+        for(auto el : elemConn) 
+            for(int inode=0;inode< npElemPres;++inode){
+                auto nodeIdx = el[inode];
+                presNodeConnCount[nodeIdx]++;
+            }
+
+        // filling nodeConnEind as the scan of nodeCount
+        presNodeConnEind.reserve(nNode_Pres+1);
+        presNodeConnEindHelper.reserve(nNode_Pres+1);
+        presNodeConnEind[0] = 0; 
+        for(int i = 1;i <= nNode_Pres; ++i) 
+            presNodeConnEind[i] = presNodeConnEind[i-1] + presNodeConnCount[i-1];
+        
+        presNodeConnEindHelper.reserve(nNode_Pres+1);
+        for(auto& presNodeConnEindElem : presNodeConnEindHelper)
+            presNodeConnEindElem = 0;
+
+        // THIS WORKS ON THE ASSUMPTION THAT ALL ELEMENTS HAVE THE SAME 
+        // NUMBER OF NODES
+        
+        presNodeConn.reserve(nElem*npElemPres);
+        for(int iEl = 0;iEl<nElem;++iEl) 
+            for(int iNodeLocal = 0; iNodeLocal < npElemPres; ++iNodeLocal) {
+                int iNode = elemConn[iEl][iNodeLocal];
+                int iNodeIdx = presNodeConnEind[iNode]+
+                    presNodeConnEindHelper[iNode];
+                presNodeConn[iNodeIdx] = iEl*npElemPres+iNodeLocal;
+                ++presNodeConnEindHelper[iNode];
+            }
+    }
+
+
     //
     // Read Dirichlet BC data
     //
@@ -759,6 +832,9 @@ int  ExplicitCFD::solveExplicitStep()
     double  dtgamma11, dtgamma12, norm_velo_diff, norm_pres_diff;
     double  timeNow=0.0, timeFact=0.0, dt=0.0;
     double  Re=2.0/elemData[1];
+            
+    vector<double> FlocalVelo(nElem*npElemVelo*ndim);
+    vector<double> FlocalPres(nElem*npElemPres);
 
     cout << " Re = " << Re << endl;
 
@@ -782,63 +858,104 @@ int  ExplicitCFD::solveExplicitStep()
     {
         if(stepsCompleted < 5000)
         {
-          timeFact = 0.5*(1-cos(PI*stepsCompleted/5000));
-          //timeFact = stepsCompleted/5000.0;
+            timeFact = 0.5*(1-cos(PI*stepsCompleted/5000));
+            //timeFact = stepsCompleted/5000.0;
         }
         else
         {
-          timeFact = 1.0;
+            timeFact = 1.0;
         }
         //timeFact = 1.0;
 
-          //#pragma omp sections
-          //{
-            //#pragma omp section
-            for(ii=0; ii<nsize_velo; ii++)
-            {
-              rhsVecVelo[ii]=0.0;
-            }
+        //#pragma omp sections
+        //{
+        //#pragma omp section
+        for(ii=0; ii<nsize_velo; ii++)
+        {
+            rhsVecVelo[ii]=0.0;
+        }
 
-            //#pragma omp section
-            for(ii=0; ii<nsize_pres; ii++)
-            {
-              rhsVecPres[ii]=0.0;
-            }
-          //}
+        //#pragma omp section
+        for(ii=0; ii<nsize_pres; ii++)
+        {
+            rhsVecPres[ii]=0.0;
+        }
 
-        #pragma omp parallel private(ee, ii, jj, kk, dd) default(shared)
+        for(ii = 0; ii< nElem*npElemVelo*ndim; ++ii) FlocalVelo[ii] = 0;
+        for(ii = 0; ii< nElem*npElemPres; ++ii) FlocalPres[ii] = 0;
+#pragma omp parallel private(ee, ii, jj, kk, dd) default(shared)
         {
           //Loop over elements and compute the RHS and time step
           dtCrit=1.0e10;
           #pragma omp for reduction(min : dtCrit) schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
           for(ee=0; ee<nElem; ee++)
           {
-            vector<double>  FlocalVelo(npElem*ndof), FlocalPres(npElem*ndof);
+            int presOffset = ee*npElemPres; //PRIVATE
+            int veloOffset = ee*npElemVelo*ndim; //PRIVATE
             fact = timeNow - dt;
             //Compute the element force vector, including residual force and time step
+            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, &FlocalVelo[veloOffset], &FlocalPres[presOffset], fact) );
 
-            dtCrit = min(dtCrit, elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, FlocalVelo, FlocalPres, fact) );
+          } //LoopElem
 
-            //printVector(FlocalVelo);
-            //printVector(Flocal2);
-            //int ii, jj, kk, dd;
-            //Assemble the element vector
-            //#pragma omp critical
-            //{
+          //Loop on velocity nodes
+          #pragma omp for 
+          for(int inode=0;inode < nNode_Velo;++inode)
+          {
+              // initialization
+              for(int idd=0; idd<ndim; idd++) rhsVecVelo[inode*ndim+idd] = 0;
+
+              for(int iNodeIdx=veloNodeConnEind[inode];
+                      iNodeIdx<veloNodeConnEind[inode+1];
+                      ++iNodeIdx){
+
+                  int ijj = veloNodeConn[iNodeIdx];
+                  for(int idd=0; idd<ndim; idd++)
+                  {
+                      rhsVecVelo[inode*ndim+idd] += 
+                          FlocalVelo[ijj*ndim+idd];
+                  }
+              }
+          } //Loop on velocity nodes
+
+          //Loop on pressure nodes
+          #pragma omp for 
+          for(int inode=0;inode < nNode_Pres;++inode)
+          {
+              // initialization
+              rhsVecPres[inode] = 0;
+
+              for(int iNodeIdx=presNodeConnEind[inode];
+                      iNodeIdx<presNodeConnEind[inode+1];
+                      ++iNodeIdx){
+
+                  int iii = presNodeConn[iNodeIdx];
+                  rhsVecPres[inode]   += FlocalPres[iii];
+              }
+          } //Loop on pressure nodes
+
+
+          /*
+            {
               for(ii=0; ii<npElemVelo; ii++)
               {
                 jj = ndim*ii;
                 kk = ndim*elemConn[ee][ii];
 
                 for(dd=0; dd<ndim; dd++)
+                {
+                  //#pragma omp atomic    
                   rhsVecVelo[kk+dd] += FlocalVelo[jj+dd];
+                }
               }
               for(ii=0; ii<npElemPres; ii++)
               {
+                //#pragma omp atomic    
                 rhsVecPres[elemConn[ee][ii]]   += FlocalPres[ii];
               }
-            //}
-          } //LoopElem
+            }
+*/
+
           dt = dtCrit*CFL/gamm1;
 
           // Add specified nodal force 

@@ -141,7 +141,7 @@ void BernsteinElem2DINSTria6Node::prepareElemData(const vector<vector<double> >&
 
 
 
-double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, VectorXd&  FlocalVelo, VectorXd&  FlocalPres, double timeCur)
+double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, double*  FlocalVelo, double*  FlocalPres, double timeCur)
 {
     double  b1, b2, b3, b4, Da;
     double  velo[2], veloPrev[2], Du[2], dp[2], resi[2], rStab[2], gradTvel[2], pres;
@@ -170,8 +170,6 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
     //KimMoinFlow  analy(rho, mu, 0.0);
 
     //loop over Gauss points and compute element residual
-    setZero(FlocalVelo);
-    setZero(FlocalPres);
     force[0] = 0.0;    force[1] = 0.0;
 
     for(gp=0; gp<nGP; gp++)

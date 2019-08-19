@@ -1,0 +1,7 @@
+build
+*.vtk
+timings.txt
+gmon.out
+gprof*
+convergence-data.dat
+incexplicitSerial

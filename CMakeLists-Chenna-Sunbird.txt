@@ -1,0 +1,63 @@
+cmake_minimum_required(VERSION 2.6)
+project(xcfd)
+
+enable_language(CXX)
+
+
+##################################
+# compiler options
+##################################
+
+#set(CMAKE_CXX_COMPILER "/apps/compilers/gnu/7.3.0/bin/g++")
+set(CMAKE_CXX_COMPILER "/apps/compilers/pgi/19.4/linux86-64-llvm/19.4/bin/pgc++")
+
+#set(COPT "-w -std=c++11 -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
+
+set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
+
+
+##################################
+# include directories
+##################################
+include_directories(
+src/base
+#/usr/include/c++/7 
+#/home/s.engkadac/eigen-eigen-8071cda5714d
+#/home/s.engkadac/eigen-eigen-8071cda5714d/unsupported 
+)
+
+
+
+##################################
+# lib directories
+##################################
+link_directories(
+#/usr/lib/libblas
+#/usr/lib/lapack 
+/usr/lib 
+)
+
+
+
+##################################
+# source files
+##################################
+
+
+file(GLOB sources1 src/base/*.h)
+file(GLOB sources2 src/base/*.cpp)
+
+##################################
+##################################
+
+add_executable(incexplicitSerial       src/incexplicitSerial.cpp ${sources1} ${sources2})
+
+target_link_libraries(incexplicitSerial stdc++ m)
+
+
+#install(TARGETS incexplicitSerial       RUNTIME DESTINATION /home/chenna/Documents/myCode/XCFD/bin)
+install(TARGETS incexplicitSerial       RUNTIME DESTINATION /home/s.engkadac/XCFD/bin)
+
+

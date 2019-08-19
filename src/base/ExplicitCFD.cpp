@@ -870,7 +870,7 @@ int  ExplicitCFD::solveExplicitStep()
           cout << " stepsCompleted = " << stepsCompleted << '\t' << " timeNow = " << timeNow << endl;
           cout << " velocity difference norm = " << '\t' << norm_velo << endl;
 
-          postProcess();
+          //postProcess();
 
           setZero(TotalForce);
           for(ii=0; ii<outputEdges.size(); ++ii)
@@ -904,6 +904,8 @@ int  ExplicitCFD::solveExplicitStep()
         timeNow = timeNow + dt;
 
     } //Time loop
+
+    postProcess();
 
     auto tend = chrono::steady_clock::now();
 

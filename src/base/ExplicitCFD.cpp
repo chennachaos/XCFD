@@ -198,27 +198,27 @@ void  ExplicitCFD::readInputData(string&  fname)
     {
         vector<int> veloNodeConnCount;
         vector<int> veloNodeConnEindHelper;
-        veloNodeConnCount.reserve(nNode_Velo);
+        veloNodeConnCount.resize(nNode_Velo);
         for(auto& veloNodeCount : veloNodeConnCount) veloNodeCount = 0;
         for(auto el : elemConn) 
             for(auto nodeIdx : el) 
                 veloNodeConnCount[nodeIdx]++;
 
         // filling nodeConnEind as the scan of nodeCount
-        veloNodeConnEind.reserve(nNode_Velo+1);
-        veloNodeConnEindHelper.reserve(nNode_Velo+1);
+        veloNodeConnEind.resize(nNode_Velo+1);
+        veloNodeConnEindHelper.resize(nNode_Velo+1);
         veloNodeConnEind[0] = 0; 
         for(int i = 1;i <= nNode_Velo; ++i) 
             veloNodeConnEind[i] = veloNodeConnEind[i-1] + veloNodeConnCount[i-1];
         
-        veloNodeConnEindHelper.reserve(nNode_Velo+1);
+        veloNodeConnEindHelper.resize(nNode_Velo+1);
         for(auto& veloNodeConnEindElem : veloNodeConnEindHelper)
             veloNodeConnEindElem = 0;
 
         // THIS WORKS ON THE ASSUMPTION THAT ALL ELEMENTS HAVE THE SAME 
         // NUMBER OF NODES
         
-        veloNodeConn.reserve(nElem*npElemVelo);
+        veloNodeConn.resize(nElem*npElemVelo);
         for(int iEl = 0;iEl<nElem;++iEl) 
             for(int iNodeLocal = 0; iNodeLocal < npElemVelo; ++iNodeLocal) {
                 int iNode = elemConn[iEl][iNodeLocal];
@@ -233,7 +233,7 @@ void  ExplicitCFD::readInputData(string&  fname)
     {
         vector<int> presNodeConnCount;
         vector<int> presNodeConnEindHelper;
-        presNodeConnCount.reserve(nNode_Pres);
+        presNodeConnCount.resize(nNode_Pres);
         for(auto& presNodeCount : presNodeConnCount) presNodeCount = 0;
         for(auto el : elemConn) 
             for(int inode=0;inode< npElemPres;++inode){
@@ -242,20 +242,20 @@ void  ExplicitCFD::readInputData(string&  fname)
             }
 
         // filling nodeConnEind as the scan of nodeCount
-        presNodeConnEind.reserve(nNode_Pres+1);
-        presNodeConnEindHelper.reserve(nNode_Pres+1);
+        presNodeConnEind.resize(nNode_Pres+1);
+        presNodeConnEindHelper.resize(nNode_Pres+1);
         presNodeConnEind[0] = 0; 
         for(int i = 1;i <= nNode_Pres; ++i) 
             presNodeConnEind[i] = presNodeConnEind[i-1] + presNodeConnCount[i-1];
         
-        presNodeConnEindHelper.reserve(nNode_Pres+1);
+        presNodeConnEindHelper.resize(nNode_Pres+1);
         for(auto& presNodeConnEindElem : presNodeConnEindHelper)
             presNodeConnEindElem = 0;
 
         // THIS WORKS ON THE ASSUMPTION THAT ALL ELEMENTS HAVE THE SAME 
         // NUMBER OF NODES
         
-        presNodeConn.reserve(nElem*npElemPres);
+        presNodeConn.resize(nElem*npElemPres);
         for(int iEl = 0;iEl<nElem;++iEl) 
             for(int iNodeLocal = 0; iNodeLocal < npElemPres; ++iNodeLocal) {
                 int iNode = elemConn[iEl][iNodeLocal];

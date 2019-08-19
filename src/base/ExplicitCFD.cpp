@@ -806,11 +806,11 @@ int  ExplicitCFD::solveExplicitStep()
             }
           //}
 
-        #pragma omp parallel private(ee, ii, jj, kk, dd) default(shared)
-        {
+        //#pragma omp parallel private(ee, ii, jj, kk, dd, fact) default(shared)
+        //{
           //Loop over elements and compute the RHS and time step
           dtCrit=1.0e10;
-          #pragma omp for reduction(min : dtCrit) //schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
+          #pragma omp parallel for private(ee, ii, jj, kk, dd, fact)  reduction(min : dtCrit) //schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
           for(ee=0; ee<nElem; ee++)
           {
             vector<double>  FlocalVelo(npElem*ndof), FlocalPres(npElem*ndof);
@@ -839,7 +839,7 @@ int  ExplicitCFD::solveExplicitStep()
               }
             }
           } //LoopElem
-        }
+        //}
 
         //cout << dtCrit << endl;
 

@@ -1,7 +1,7 @@
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+#from pylab import *
 import numpy as np
 import sys
-from pylab import *
 import os
 
 
@@ -33,11 +33,10 @@ if( errnorm < 1.0e-10):
 else:
     print("Test for '%s' is NOT SUCCESSFUL \n" % inpfile)
 
-plt.plot(xR[:,1],np.log10(xR[:,2]), 'r', label="Reference", linewidth=2.0, markersize=8.0)
-plt.plot(x1[:,1],np.log10(x1[:,2]), 'k.', label="Present", linewidth=2.0, markersize=8.0)
-plt.legend(loc="upper right")
-plt.grid('on')
+#plt.plot(xR[:,1],np.log10(xR[:,2]), 'r', label="Reference", linewidth=2.0, markersize=8.0)
+#plt.plot(x1[:,1],np.log10(x1[:,2]), 'k.', label="Present", linewidth=2.0, markersize=8.0)
+#plt.legend(loc="upper right")
+#plt.grid('on')
 
-
-plt.savefig("convergence.png", dpi=500)
+#plt.savefig("convergence.png", dpi=500)
 

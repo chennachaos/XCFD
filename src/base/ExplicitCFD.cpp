@@ -810,7 +810,7 @@ int  ExplicitCFD::solveExplicitStep()
         {
           //Loop over elements and compute the RHS and time step
           dtCrit=1.0e10;
-          #pragma omp for reduction(min : dtCrit) schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
+          #pragma omp for reduction(min : dtCrit) //schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
           for(ee=0; ee<nElem; ee++)
           {
             vector<double>  FlocalVelo(npElem*ndof), FlocalPres(npElem*ndof);
@@ -823,8 +823,8 @@ int  ExplicitCFD::solveExplicitStep()
             //printVector(Flocal2);
             //int ii, jj, kk, dd;
             //Assemble the element vector
-            //#pragma omp critical
-            //{
+            #pragma omp critical
+            {
               for(ii=0; ii<npElemVelo; ii++)
               {
                 jj = ndim*ii;
@@ -835,10 +835,14 @@ int  ExplicitCFD::solveExplicitStep()
               }
               for(ii=0; ii<npElemPres; ii++)
               {
-                rhsVecPres[elemConn[ee][ii]]   += FlocalPres[ii];
+                  rhsVecPres[elemConn[ee][ii]]   += FlocalPres[ii];
               }
-            //}
+            }
           } //LoopElem
+        }
+
+        //cout << dtCrit << endl;
+
           dt = dtCrit*CFL/gamm1;
 
           // Add specified nodal force 
@@ -848,7 +852,7 @@ int  ExplicitCFD::solveExplicitStep()
           dtgamma11 = dt*gamm1;
           dtgamma12 = dt*(1.0-gamm1);
 
-          #pragma omp for
+          //#pragma omp for
           for(ii=0; ii<totalDOF_Velo; ii++)
           {
             jj = assyForSolnVelo[ii];
@@ -857,7 +861,7 @@ int  ExplicitCFD::solveExplicitStep()
             velo[jj]    = veloPrev[jj] + dtgamma11*veloDot[jj] + dtgamma12*veloDotPrev[jj];
           }
 
-          #pragma omp for
+          //#pragma omp for
           for(ii=0; ii<totalDOF_Pres; ii++)
           {
             jj = assyForSolnPres[ii];
@@ -866,14 +870,14 @@ int  ExplicitCFD::solveExplicitStep()
             pres[jj]    = presPrev[jj] + dtgamma11*presDot[jj] + dtgamma12*presDotPrev[jj];
           }
 
-          #pragma omp single
+          //#pragma omp single
           applyBoundaryConditions(timeFact);
           //printVector(velo);
 
           // compute the norms and store the variables
           norm_velo = 0.0;
           norm_velo_diff = 0.0;
-          #pragma omp for reduction(+:norm_velo,norm_velo_diff)
+          //#pragma omp for reduction(+:norm_velo,norm_velo_diff)
           for(ii=0; ii<nsize_velo; ii++)
           {
             norm_velo += velo[ii]*velo[ii];
@@ -890,7 +894,7 @@ int  ExplicitCFD::solveExplicitStep()
 
           norm_pres = 0.0;
           norm_pres_diff = 0.0;
-          #pragma omp for reduction(+:norm_pres, norm_pres_diff)
+          //#pragma omp for reduction(+:norm_pres, norm_pres_diff)
           for(ii=0; ii<nsize_pres; ii++)
           {
             norm_pres += pres[ii]*pres[ii];
@@ -903,7 +907,6 @@ int  ExplicitCFD::solveExplicitStep()
             presPrev[ii]     = pres[ii];
             presDotPrev[ii]  = presDot[ii];
           }
-        }
 
         if( std::isnan(norm_velo) || std::isnan(norm_pres) )
         {
@@ -927,6 +930,7 @@ int  ExplicitCFD::solveExplicitStep()
 
             //postProcess();
 
+            /*
             setZero(TotalForce);
             for(ii=0; ii<outputEdges.size(); ii++)
             {
@@ -935,6 +939,7 @@ int  ExplicitCFD::solveExplicitStep()
 
             fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
             fout_convdata << '\t' << TotalForce[0] << '\t' << TotalForce[1] << '\t' << TotalForce[2] << endl;
+            */
         }
 
         if(norm_velo < conv_tol)

@@ -9,6 +9,9 @@
 #include "BernsteinElem3DINSTetra10Node.h"
 #include "omp.h"
 
+#include <fstream>
+#include <iomanip>
+
 using namespace std;
 
 
@@ -844,16 +847,18 @@ int  ExplicitCFD::solveExplicitStep()
     int nthreads, thread_cur;
 
     #pragma omp parallel
-    nthreads = omp_get_num_threads();
+    //nthreads = omp_get_num_threads();
+    //cout << " nthreads = " << nthreads << endl;
 
-    cout << " nthreads = " << nthreads << endl;
-
-    double time1 = omp_get_wtime();
-    //auto time1 = chrono::steady_clock::now();
+    //double time1 = omp_get_wtime();
+    auto time1 = chrono::steady_clock::now();
 
     //setInitialConditions();
     //timeFact = 1.0;
     //Time loop
+   
+    ofstream check("idxcheck_new.txt");
+    bool already_printed = false;
     while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
     {
         if(stepsCompleted < 5000)
@@ -914,11 +919,16 @@ int  ExplicitCFD::solveExplicitStep()
                   {
                       rhsVecVelo[inode*ndim+idd] += 
                           FlocalVelo[ijj*ndim+idd];
+
+                      if(not already_printed) 
+                          check << "velo " <<setw(7) << ijj*ndim+idd
+                      << setw(7) << inode*ndim+idd << endl;
+
+
                   }
               }
           } //Loop on velocity nodes
-
-          //Loop on pressure nodes
+         //Loop on pressure nodes
           #pragma omp for 
           for(int inode=0;inode < nNode_Pres;++inode)
           {
@@ -931,9 +941,17 @@ int  ExplicitCFD::solveExplicitStep()
 
                   int iii = presNodeConn[iNodeIdx];
                   rhsVecPres[inode]   += FlocalPres[iii];
+
+                     if(not already_printed) 
+                          check << "pres " <<setw(7) << iii 
+                      << setw(7) << inode << endl;
+
+
               }
           } //Loop on pressure nodes
-
+          already_printed = true;
+          if(already_printed) check.close();
+ 
 
           /*
             {
@@ -1067,11 +1085,11 @@ int  ExplicitCFD::solveExplicitStep()
 
     postProcess();
 
-    //auto tend = chrono::steady_clock::now();
-    double tend = omp_get_wtime();
+    auto tend = chrono::steady_clock::now();
+    //double tend = omp_get_wtime();
 
-    //auto duration = chrono::duration_cast<chrono::milliseconds>(tend-time1).count();
-    double  duration = tend - time1;
+    auto duration = chrono::duration_cast<chrono::milliseconds>(tend-time1).count();
+    //double  duration = tend - time1;
 
     cout << " \n \n Total time taken = " << duration << " seconds \n\n" << endl;
 

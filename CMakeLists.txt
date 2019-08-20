@@ -22,7 +22,7 @@ set(COPTGDB "-w -std=c++11 -g -O0 -Wall -Wextra -Wshadow -pedantic -Wno-uninitia
 
 set(COPTPGI "-w -std=c++11 -mp -fast -DVTK_LEGACY_FORMAT")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPTGNU}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPTGNUOMP}")
 
 
 ##################################

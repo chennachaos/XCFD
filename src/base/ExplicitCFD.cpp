@@ -1047,7 +1047,6 @@ int  ExplicitCFD::solveExplicitStep()
 
             timeNow = timeNow + dt;
         }
-#pragma omp barrier
     } //Time loop
 
     postProcess();

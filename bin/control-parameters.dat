@@ -5,8 +5,8 @@ beta              0.9
 gamma1            1.5
 gamma2            1.5
 CFL               0.9
-dt                0.005
+dt                0.002
 FinalTime         50000.0
-MaximumSteps      100000
+MaximumSteps      1000000
 OutputFrequency   1000
 tolerance         0.00001

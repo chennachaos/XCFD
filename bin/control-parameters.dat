@@ -8,5 +8,5 @@ CFL               0.9
 dt                0.005
 FinalTime         50000.0
 MaximumSteps      100000
-OutputFrequency   100
-tolerance         0.000001
+OutputFrequency   1000
+tolerance         0.00001

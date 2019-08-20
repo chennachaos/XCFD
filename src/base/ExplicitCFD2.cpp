@@ -160,7 +160,7 @@ int ExplicitCFD::prepareMatrixPattern()
     //cout << " totalDOF " << totalDOF << endl;
     for(ee=0; ee<nElem; ++ee)
     {
-      elems[ee]->forAssyVec = LM[ee];
+      elems[ee].forAssyVec = LM[ee];
     }
     */
 
@@ -298,7 +298,7 @@ int ExplicitCFD::calcMassMatrixForExplicitDynamics()
     for(ee=0; ee<nElem; ++ee)
     {
         // compute mass matrix and assemble it
-        elems[ee]->MassMatrices(node_coords, elemData, FlocalVelo, FlocalPres);
+        elems[ee].MassMatrices(node_coords, elemData, FlocalVelo, FlocalPres);
 
         //Assemble the element mass to the global mass
         for(ii=0; ii<npElemVelo; ++ii)
@@ -374,7 +374,7 @@ int  ExplicitCFD::solveExplicitStepDTS()
 
         //dtCrit=1.0e10;
         //for(ee=0; ee<nElem; ++ee)
-          //dtCrit = min(dtCrit, elems[ee]->calcCriticalTimeStep(elemData, timeData, veloPrev));
+          //dtCrit = min(dtCrit, elems[ee].calcCriticalTimeStep(elemData, timeData, veloPrev));
         //dt = dtCrit*0.9;
         //cout << " dtCrit = " << dtCrit << endl;
 
@@ -433,7 +433,7 @@ int  ExplicitCFD::solveExplicitStepDTS()
           {
             fact = timeNow - dt;
             //Compute the element force vector, including residual force
-            dtCrit = elems[ee]->ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, veloM, veloPrev, veloDotM, veloDotPrev, presM, presPrev, FlocalVelo, FlocalPres, fact);
+            dtCrit = elems[ee].ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, veloM, veloPrev, veloDotM, veloDotPrev, presM, presPrev, FlocalVelo, FlocalPres, fact);
 
             //Assemble the element vector
             for(ii=0; ii<npElemVelo; ++ii)
@@ -597,7 +597,7 @@ void ExplicitCFD::computeElementErrors(int ind)
       totalError = 0.0;
       for(int ee=0; ee<nElem; ++ee)
       {
-        totalError += elems[ee]->CalculateError(node_coords, elemData, timeData, solnVTK, veloDot, pres, timeNow, index);
+        totalError += elems[ee].CalculateError(node_coords, elemData, timeData, solnVTK, veloDot, pres, timeNow, index);
       }
 
       totalError = sqrt(totalError);

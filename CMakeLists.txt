@@ -20,9 +20,9 @@ set(COPTGNUOMP "-w -std=c++11 -fopenmp -O3 -Wall -Wextra -Wshadow -pedantic -Wno
 set(COPTGNU "-w -std=c++11 -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
 set(COPTGDB "-w -std=c++11 -g -O0 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
 
-set(COPTPGI "-w -std=c++11 -mp -fast -DVTK_LEGACY_FORMAT")
+set(COPTPGI "-w -std=c++11 -acc -fast -DVTK_LEGACY_FORMAT -ta=tesla:managed")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPTGNUOMP}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPTPGI}")
 
 
 ##################################

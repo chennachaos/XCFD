@@ -13,7 +13,9 @@ set(CMAKE_CXX_COMPILER "/apps/compilers/pgi/19.4/linux86-64-llvm/19.4/bin/pgc++"
 
 #set(COPT "-w -std=c++11 -O3 -Wall -Wextra -Wshadow -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp  -fpermissive -frounding-math -DVTK_LEGACY_FORMAT")
 
-set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -mp")
+#set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -mp")
+#set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -mp -ta=multicore -Minfo=mp -v")
+set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -mp -ta=multicore -Minfo=accel")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
 
@@ -37,6 +39,7 @@ link_directories(
 #/usr/lib/libblas
 #/usr/lib/lapack 
 /usr/lib 
+/usr/lib64
 )
 
 

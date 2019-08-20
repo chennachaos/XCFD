@@ -7,7 +7,7 @@
 #include <vector>
 #include <fstream>
 #include "ElementBase.h"
-
+#include "BernsteinElem2DINSTria6Node.h"
 
 using std::vector;
 using std::cout;
@@ -71,7 +71,7 @@ class ExplicitCFD
         vector<vector<double> >  ElemFaceLoadData;
 
 
-        ElementBase  **elems;
+        vector<BernsteinElem2DINSTria6Node>  elems;
         ElementBase  **elemsFaces;
 
 

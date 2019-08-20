@@ -9,9 +9,6 @@
 #include "BernsteinElem3DINSTetra10Node.h"
 #include "omp.h"
 
-#include <fstream>
-#include <iomanip>
-
 using namespace std;
 
 
@@ -857,8 +854,6 @@ int  ExplicitCFD::solveExplicitStep()
     //timeFact = 1.0;
     //Time loop
    
-    ofstream check("idxcheck_new.txt");
-    bool already_printed = false;
     while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
     {
         if(stepsCompleted < 5000)
@@ -915,17 +910,8 @@ int  ExplicitCFD::solveExplicitStep()
                       ++iNodeIdx){
 
                   int ijj = veloNodeConn[iNodeIdx];
-                  for(int idd=0; idd<ndim; idd++)
-                  {
-                      rhsVecVelo[inode*ndim+idd] += 
-                          FlocalVelo[ijj*ndim+idd];
-
-                      if(not already_printed) 
-                          check << "velo " <<setw(7) << ijj*ndim+idd
-                      << setw(7) << inode*ndim+idd << endl;
-
-
-                  }
+                  for(int idd=0; idd<ndim; idd++) 
+                      rhsVecVelo[inode*ndim+idd] += FlocalVelo[ijj*ndim+idd];
               }
           } //Loop on velocity nodes
          //Loop on pressure nodes
@@ -942,15 +928,8 @@ int  ExplicitCFD::solveExplicitStep()
                   int iii = presNodeConn[iNodeIdx];
                   rhsVecPres[inode]   += FlocalPres[iii];
 
-                     if(not already_printed) 
-                          check << "pres " <<setw(7) << iii 
-                      << setw(7) << inode << endl;
-
-
               }
           } //Loop on pressure nodes
-          already_printed = true;
-          if(already_printed) check.close();
  
 
           /*

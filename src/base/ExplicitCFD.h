@@ -58,6 +58,16 @@ class ExplicitCFD
         vector<vector<int> >     outputEdges;               //!< data for computing drag/lift forces
         vector<vector<int> >     elemConn;                  //!< element-node connectivity array
 
+        // Velocity node -> element,nodeidx 
+        vector<int>              veloNodeConn;                  //!< velocitynode-element connectivity array // npElemVelo*nElem
+        vector<int>              veloNodeConnEind;              //!< velocitynode-element connectivity array helper // nNode
+
+        // Pressure node -> element,nodeidx 
+        vector<int>              presNodeConn;                  //!< velocitynode-element connectivity array // npElemPres*nElem
+        vector<int>              presNodeConnEind;              //!< velocitynode-element connectivity array helper // nNode
+
+
+
         vector<int>  assyForSolnVelo, assyForSolnPres, OutputNodes;
         vector<int>  pressure_nodes, pressure_nodes_map;
 

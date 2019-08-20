@@ -24,8 +24,8 @@ ExplicitCFD::ExplicitCFD()
 
     if(fout_convdata.fail())
     {
-       cout << " Could not open the Output file" << endl;
-       exit(1);
+        cout << " Could not open the Output file" << endl;
+        exit(1);
     }
 
     fout_convdata.setf(ios::fixed);
@@ -52,8 +52,8 @@ void  ExplicitCFD::readInputData(string&  fname)
 
     if(infile.fail())
     {
-       cout << " Could not open the input nodes file " << endl;
-       exit(1);
+        cout << " Could not open the input nodes file " << endl;
+        exit(1);
     }
 
     string  line, stringVal, stringVec[10];
@@ -69,14 +69,14 @@ void  ExplicitCFD::readInputData(string&  fname)
     npElemVelo = npElem;
     if(ndim == 2)
     {
-      if(npElem == 6)
-        npElemPres = 3;
-      else
-        npElemPres = 4;
+        if(npElem == 6)
+            npElemPres = 3;
+        else
+            npElemPres = 4;
     }
     {
-      if(npElem == 10)
-        npElemPres = 4;
+        if(npElem == 10)
+            npElemPres = 4;
     }
 
     // read number of nodes
@@ -111,23 +111,23 @@ void  ExplicitCFD::readInputData(string&  fname)
 
     node_coords.resize(nNode);
     for(ii=0; ii<nNode; ++ii)
-      node_coords[ii].resize(ndim);
+        node_coords[ii].resize(ndim);
 
     infile >> stringVal ;
     cout << " reading " << stringVal << endl;
     if(ndim == 2)
     {
-      for(ii=0; ii<nNode; ++ii)
-      {
-        infile >> tempDbl >> node_coords[ii][0] >> node_coords[ii][1] ;
-      }
+        for(ii=0; ii<nNode; ++ii)
+        {
+            infile >> tempDbl >> node_coords[ii][0] >> node_coords[ii][1] ;
+        }
     }
     else
     {
-      for(ii=0; ii<nNode; ++ii)
-      {
-        infile >> tempDbl >> node_coords[ii][0] >> node_coords[ii][1] >> node_coords[ii][2];
-      }
+        for(ii=0; ii<nNode; ++ii)
+        {
+            infile >> tempDbl >> node_coords[ii][0] >> node_coords[ii][1] >> node_coords[ii][2];
+        }
     }
 
     // read elements
@@ -139,50 +139,123 @@ void  ExplicitCFD::readInputData(string&  fname)
 
     if(npElem == 6)
     {
-      for(int ee=0; ee<nElem; ++ee)
-      {
-        elemConn[ee].resize(npElem);
+        for(int ee=0; ee<nElem; ++ee)
+        {
+            elemConn[ee].resize(npElem);
 
-        infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] ;
+            infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] ;
 
-        //printf("%6d \t %6d \t %6d \t %6d \n", arrayInt[4], arrayInt[5], arrayInt[6], arrayInt[7]);
+            //printf("%6d \t %6d \t %6d \t %6d \n", arrayInt[4], arrayInt[5], arrayInt[6], arrayInt[7]);
 
-        for(ii=0; ii<npElem; ++ii)
-          elemConn[ee][ii] = arrayInt[4+ii]-1;
-      }
+            for(ii=0; ii<npElem; ++ii)
+                elemConn[ee][ii] = arrayInt[4+ii]-1;
+        }
     }
     else if(npElem == 9)
     {
-      for(int ee=0; ee<nElem; ++ee)
-      {
-        elemConn[ee].resize(npElem);
+        for(int ee=0; ee<nElem; ++ee)
+        {
+            elemConn[ee].resize(npElem);
 
-        infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] >> arrayInt[10] >> arrayInt[11] >> arrayInt[12] ;
+            infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] >> arrayInt[10] >> arrayInt[11] >> arrayInt[12] ;
 
-        for(ii=0; ii<npElem; ++ii)
-          elemConn[ee][ii] = arrayInt[4+ii]-1;
-      }
+            for(ii=0; ii<npElem; ++ii)
+                elemConn[ee][ii] = arrayInt[4+ii]-1;
+        }
     }
     else if(npElem == 10)
     {
-      for(int ee=0; ee<nElem; ++ee)
-      {
-        elemConn[ee].resize(npElem);
+        for(int ee=0; ee<nElem; ++ee)
+        {
+            elemConn[ee].resize(npElem);
 
-        //infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] >> arrayInt[10] >> arrayInt[11] >> arrayInt[12] >> arrayInt[13] ;
-        infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] >> arrayInt[10] ;
+            //infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] >> arrayInt[10] >> arrayInt[11] >> arrayInt[12] >> arrayInt[13] ;
+            infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6] >> arrayInt[7] >> arrayInt[8] >> arrayInt[9] >> arrayInt[10] ;
 
-        for(ii=0; ii<npElem; ++ii)
-          elemConn[ee][ii] = arrayInt[1+ii]-1;
+            for(ii=0; ii<npElem; ++ii)
+                elemConn[ee][ii] = arrayInt[1+ii]-1;
 
-        //printVector(elemConn[ee]);
-      }
+            //printVector(elemConn[ee]);
+        }
     }
     else
     {
-      cerr << " Invalid npElem " << npElem << endl;
-      exit(-1);
+        cerr << " Invalid npElem " << npElem << endl;
+        exit(-1);
     }
+
+    // Velocity node -> element,nodeidx 
+    {
+        vector<int> veloNodeConnCount;
+        vector<int> veloNodeConnEindHelper;
+        veloNodeConnCount.resize(nNode_Velo);
+        for(auto& veloNodeCount : veloNodeConnCount) veloNodeCount = 0;
+        for(auto el : elemConn) 
+            for(auto nodeIdx : el) 
+                veloNodeConnCount[nodeIdx]++;
+
+        // filling nodeConnEind as the scan of nodeCount
+        veloNodeConnEind.resize(nNode_Velo+1);
+        veloNodeConnEindHelper.resize(nNode_Velo+1);
+        veloNodeConnEind[0] = 0; 
+        for(int i = 1;i <= nNode_Velo; ++i) 
+            veloNodeConnEind[i] = veloNodeConnEind[i-1] + veloNodeConnCount[i-1];
+
+        veloNodeConnEindHelper.resize(nNode_Velo+1);
+        for(auto& veloNodeConnEindElem : veloNodeConnEindHelper)
+            veloNodeConnEindElem = 0;
+
+        // THIS WORKS ON THE ASSUMPTION THAT ALL ELEMENTS HAVE THE SAME 
+        // NUMBER OF NODES
+
+        veloNodeConn.resize(nElem*npElemVelo);
+        for(int iEl = 0;iEl<nElem;++iEl) 
+            for(int iNodeLocal = 0; iNodeLocal < npElemVelo; ++iNodeLocal) {
+                int iNode = elemConn[iEl][iNodeLocal];
+                int iNodeIdx = veloNodeConnEind[iNode]+
+                    veloNodeConnEindHelper[iNode];
+                veloNodeConn[iNodeIdx] = iEl*npElemVelo+iNodeLocal;
+                ++veloNodeConnEindHelper[iNode];
+            }
+    }
+
+    // Pressure node -> element,nodeidx 
+    {
+        vector<int> presNodeConnCount;
+        vector<int> presNodeConnEindHelper;
+        presNodeConnCount.resize(nNode_Pres);
+        for(auto& presNodeCount : presNodeConnCount) presNodeCount = 0;
+        for(auto el : elemConn) 
+            for(int inode=0;inode< npElemPres;++inode){
+                auto nodeIdx = el[inode];
+                presNodeConnCount[nodeIdx]++;
+            }
+
+        // filling nodeConnEind as the scan of nodeCount
+        presNodeConnEind.resize(nNode_Pres+1);
+        presNodeConnEindHelper.resize(nNode_Pres+1);
+        presNodeConnEind[0] = 0; 
+        for(int i = 1;i <= nNode_Pres; ++i) 
+            presNodeConnEind[i] = presNodeConnEind[i-1] + presNodeConnCount[i-1];
+
+        presNodeConnEindHelper.resize(nNode_Pres+1);
+        for(auto& presNodeConnEindElem : presNodeConnEindHelper)
+            presNodeConnEindElem = 0;
+
+        // THIS WORKS ON THE ASSUMPTION THAT ALL ELEMENTS HAVE THE SAME 
+        // NUMBER OF NODES
+
+        presNodeConn.resize(nElem*npElemPres);
+        for(int iEl = 0;iEl<nElem;++iEl) 
+            for(int iNodeLocal = 0; iNodeLocal < npElemPres; ++iNodeLocal) {
+                int iNode = elemConn[iEl][iNodeLocal];
+                int iNodeIdx = presNodeConnEind[iNode]+
+                    presNodeConnEindHelper[iNode];
+                presNodeConn[iNodeIdx] = iEl*npElemPres+iNodeLocal;
+                ++presNodeConnEindHelper[iNode];
+            }
+    }
+
 
     //
     // Read Dirichlet BC data
@@ -198,22 +271,22 @@ void  ExplicitCFD::readInputData(string&  fname)
     nDBC_Pres = 0;
     for(ii=0; ii<nDBC; ++ii)
     {
-      infile >> arrayInt[0] >> arrayInt[1] >> tempDbl ;
+        infile >> arrayInt[0] >> arrayInt[1] >> tempDbl ;
 
-      vecDblTemp[0] = arrayInt[0]-1;
-      vecDblTemp[1] = arrayInt[1]-1;
-      vecDblTemp[2] = tempDbl;
+        vecDblTemp[0] = arrayInt[0]-1;
+        vecDblTemp[1] = arrayInt[1]-1;
+        vecDblTemp[2] = tempDbl;
 
-      if( arrayInt[1] > ndim )
-      {
-        DirichletBCsPres.push_back(vecDblTemp);
-        nDBC_Pres++;
-      }
-      else
-      {
-        DirichletBCsVelo.push_back(vecDblTemp);
-        nDBC_Velo++;
-      }
+        if( arrayInt[1] > ndim )
+        {
+            DirichletBCsPres.push_back(vecDblTemp);
+            nDBC_Pres++;
+        }
+        else
+        {
+            DirichletBCsVelo.push_back(vecDblTemp);
+            nDBC_Velo++;
+        }
     }
 
     cout << " nDBC_Velo      = " << '\t' << nDBC_Velo << endl;
@@ -231,12 +304,12 @@ void  ExplicitCFD::readInputData(string&  fname)
 
     for(ii=0; ii<nOutputFaceLoads; ++ii)
     {
-      outputEdges[ii].resize(2);
+        outputEdges[ii].resize(2);
 
-      infile >> arrayInt[0] >> arrayInt[1];
+        infile >> arrayInt[0] >> arrayInt[1];
 
-      outputEdges[ii][0] = arrayInt[0]-1;
-      outputEdges[ii][1] = arrayInt[1]-1;
+        outputEdges[ii][0] = arrayInt[0]-1;
+        outputEdges[ii][1] = arrayInt[1]-1;
     }
 
     infile.close();
@@ -275,16 +348,16 @@ void ExplicitCFD::prepareInputData()
 
     for(ee=0;ee<nElem;++ee)
     {
-      //if(npElem == 6)
-      //elems = new BernsteinElem2DINSTria6Node;
-      //else if(npElem == 9)
+        //if(npElem == 6)
+        //elems = new BernsteinElem2DINSTria6Node;
+        //else if(npElem == 9)
         //elems[ee] = new BernsteinElem2DINSQuad9Node;
-      //else if(npElem == 10)
+        //else if(npElem == 10)
         //elems[ee] = new BernsteinElem3DINSTetra10Node;
 
-      elems[ee].nodeNums = elemConn[ee];
+        elems[ee].nodeNums = elemConn[ee];
 
-      elems[ee].prepareElemData(node_coords);
+        elems[ee].prepareElemData(node_coords);
     }
 
     cout << " elements are created and prepated " << endl;
@@ -303,105 +376,105 @@ void ExplicitCFD::prepareInputData()
     midNodeData.resize(nNode);
     for(ii=0; ii<nNode; ++ii)
     {
-      midNodeData[ii].resize(3);
+        midNodeData[ii].resize(3);
 
-      // set the default value to 0 ('not a mid-node')
-      midNodeData[ii][0] = 0;  midNodeData[ii][1] = 0;  midNodeData[ii][2] = 0;
+        // set the default value to 0 ('not a mid-node')
+        midNodeData[ii][0] = 0;  midNodeData[ii][1] = 0;  midNodeData[ii][2] = 0;
     }
 
     if(npElem == 6)
     {
-      for(ee=0; ee<nElem; ++ee)
-      {
-        ii = elemConn[ee][3];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][0];
-        midNodeData[ii][2] = elemConn[ee][1];
+        for(ee=0; ee<nElem; ++ee)
+        {
+            ii = elemConn[ee][3];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][0];
+            midNodeData[ii][2] = elemConn[ee][1];
 
-        ii = elemConn[ee][4];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][1];
-        midNodeData[ii][2] = elemConn[ee][2];
+            ii = elemConn[ee][4];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][1];
+            midNodeData[ii][2] = elemConn[ee][2];
 
-        ii = elemConn[ee][5];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][2];
-        midNodeData[ii][2] = elemConn[ee][0];
+            ii = elemConn[ee][5];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][2];
+            midNodeData[ii][2] = elemConn[ee][0];
 
-        pressure_nodes.push_back(elemConn[ee][0]);
-        pressure_nodes.push_back(elemConn[ee][1]);
-        pressure_nodes.push_back(elemConn[ee][2]);
-      }
+            pressure_nodes.push_back(elemConn[ee][0]);
+            pressure_nodes.push_back(elemConn[ee][1]);
+            pressure_nodes.push_back(elemConn[ee][2]);
+        }
     }
     else if(npElem == 9)
     {
-      for(ee=0; ee<nElem; ++ee)
-      {
-        ii = elemConn[ee][4];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][0];
-        midNodeData[ii][2] = elemConn[ee][1];
+        for(ee=0; ee<nElem; ++ee)
+        {
+            ii = elemConn[ee][4];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][0];
+            midNodeData[ii][2] = elemConn[ee][1];
 
-        ii = elemConn[ee][5];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][1];
-        midNodeData[ii][2] = elemConn[ee][2];
+            ii = elemConn[ee][5];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][1];
+            midNodeData[ii][2] = elemConn[ee][2];
 
-        ii = elemConn[ee][6];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][2];
-        midNodeData[ii][2] = elemConn[ee][3];
+            ii = elemConn[ee][6];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][2];
+            midNodeData[ii][2] = elemConn[ee][3];
 
-        ii = elemConn[ee][7];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][3];
-        midNodeData[ii][2] = elemConn[ee][0];
+            ii = elemConn[ee][7];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][3];
+            midNodeData[ii][2] = elemConn[ee][0];
 
-        pressure_nodes.push_back(elemConn[ee][0]);
-        pressure_nodes.push_back(elemConn[ee][1]);
-        pressure_nodes.push_back(elemConn[ee][2]);
-        pressure_nodes.push_back(elemConn[ee][3]);
-      }
+            pressure_nodes.push_back(elemConn[ee][0]);
+            pressure_nodes.push_back(elemConn[ee][1]);
+            pressure_nodes.push_back(elemConn[ee][2]);
+            pressure_nodes.push_back(elemConn[ee][3]);
+        }
     }
     else if(npElem == 10)
     {
-      for(ee=0; ee<nElem; ++ee)
-      {
-        ii = elemConn[ee][4];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][0];
-        midNodeData[ii][2] = elemConn[ee][1];
+        for(ee=0; ee<nElem; ++ee)
+        {
+            ii = elemConn[ee][4];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][0];
+            midNodeData[ii][2] = elemConn[ee][1];
 
-        ii = elemConn[ee][5];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][1];
-        midNodeData[ii][2] = elemConn[ee][2];
+            ii = elemConn[ee][5];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][1];
+            midNodeData[ii][2] = elemConn[ee][2];
 
-        ii = elemConn[ee][6];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][0];
-        midNodeData[ii][2] = elemConn[ee][2];
+            ii = elemConn[ee][6];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][0];
+            midNodeData[ii][2] = elemConn[ee][2];
 
-        ii = elemConn[ee][7];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][3];
-        midNodeData[ii][2] = elemConn[ee][0];
+            ii = elemConn[ee][7];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][3];
+            midNodeData[ii][2] = elemConn[ee][0];
 
-        ii = elemConn[ee][8];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][1];
-        midNodeData[ii][2] = elemConn[ee][3];
+            ii = elemConn[ee][8];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][1];
+            midNodeData[ii][2] = elemConn[ee][3];
 
-        ii = elemConn[ee][9];
-        midNodeData[ii][0] = 1;
-        midNodeData[ii][1] = elemConn[ee][2];
-        midNodeData[ii][2] = elemConn[ee][3];
+            ii = elemConn[ee][9];
+            midNodeData[ii][0] = 1;
+            midNodeData[ii][1] = elemConn[ee][2];
+            midNodeData[ii][2] = elemConn[ee][3];
 
-        pressure_nodes.push_back(elemConn[ee][0]);
-        pressure_nodes.push_back(elemConn[ee][1]);
-        pressure_nodes.push_back(elemConn[ee][2]);
-        pressure_nodes.push_back(elemConn[ee][3]);
-      }
+            pressure_nodes.push_back(elemConn[ee][0]);
+            pressure_nodes.push_back(elemConn[ee][1]);
+            pressure_nodes.push_back(elemConn[ee][2]);
+            pressure_nodes.push_back(elemConn[ee][3]);
+        }
     }
 
     findUnique(pressure_nodes);
@@ -410,7 +483,7 @@ void ExplicitCFD::prepareInputData()
     pressure_nodes_map.resize(nNode,-1);
     for(ii=0; ii<nNode_Pres; ++ii)
     {
-      pressure_nodes_map[pressure_nodes[ii]] = ii;
+        pressure_nodes_map[pressure_nodes[ii]] = ii;
     }
 
     cout << " nNode_Pres = " << nNode_Pres << endl;
@@ -481,21 +554,21 @@ void ExplicitCFD::prepareInputData()
     {
         if( midNodeData[nn][0] )
         {
-          n1 = midNodeData[nn][1];
-          n2 = midNodeData[nn][2];
+            n1 = midNodeData[nn][1];
+            n2 = midNodeData[nn][2];
 
-          xx = 0.25*node_coords[n1][0] + 0.25*node_coords[n2][0];
-          yy = 0.25*node_coords[n1][1] + 0.25*node_coords[n2][1];
+            xx = 0.25*node_coords[n1][0] + 0.25*node_coords[n2][0];
+            yy = 0.25*node_coords[n1][1] + 0.25*node_coords[n2][1];
 
-          node_coords[nn][0] = 2.0*(node_coords[nn][0] - xx);
-          node_coords[nn][1] = 2.0*(node_coords[nn][1] - yy);
+            node_coords[nn][0] = 2.0*(node_coords[nn][0] - xx);
+            node_coords[nn][1] = 2.0*(node_coords[nn][1] - yy);
 
-          if(ndim == 3)
-          {
-            zz = 0.25*node_coords[n1][2] + 0.25*node_coords[n2][2];
+            if(ndim == 3)
+            {
+                zz = 0.25*node_coords[n1][2] + 0.25*node_coords[n2][2];
 
-            node_coords[nn][2] = 2.0*(node_coords[nn][2] - zz);
-          }
+                node_coords[nn][2] = 2.0*(node_coords[nn][2] - zz);
+            }
         }
     }
 
@@ -528,9 +601,9 @@ void ExplicitCFD::prepareInputData()
 
         if( midNodeData[nn][0] )
         {
-          fact = 0.25*veloApplied[midNodeData[nn][1]*ndim+dof] + 0.25*veloApplied[midNodeData[nn][2]*ndim+dof];
+            fact = 0.25*veloApplied[midNodeData[nn][1]*ndim+dof] + 0.25*veloApplied[midNodeData[nn][2]*ndim+dof];
 
-          veloApplied[nn*ndim+dof] = 2.0*(veloApplied[nn*ndim+dof] - fact);
+            veloApplied[nn*ndim+dof] = 2.0*(veloApplied[nn*ndim+dof] - fact);
         }
     }
     //printVector(solnApplied);
@@ -568,8 +641,8 @@ void ExplicitCFD::readControlParameters()
 
     if(infile.fail())
     {
-       cout << " Could not open 'control-parameters.dat' file " << endl;
-       exit(-1);
+        cout << " Could not open 'control-parameters.dat' file " << endl;
+        exit(-1);
     }
 
     //time integration parameters
@@ -626,19 +699,19 @@ void ExplicitCFD::readControlParameters()
 
 void ExplicitCFD::printInfo()
 {
-/*
-  printf("\n Background Fluid Grid information \n");
-    printf("\n ----------------------------------------------------------------------------- \n");
-    printf("\t   Problem   Dimension        =  %5d\n\n", DIM);
-    printf("\t   Polynomial Degree          =  %5d\t%5d\t%5d\n\n", degree[0], degree[1], degree[2]);
-    printf("\t   Number of Elements         =  %5d\t%5d\t%5d\n\n", nelem[0], nelem[1], nelem[2]);
-    printf("\t   Origin of the grid         =  %12.6f\t%12.6f\t%12.6f\n\n", origin[0], origin[1], origin[2]);
-    printf("\t   Grid Length                =  %12.6f\t%12.6f\t%12.6f\n\n", gridLEN[0], gridLEN[1], gridLEN[2]);
-    printf("\t   MAXIMUM REFINEMENT LEVEL   =  %5d\n\n", MAX_LEVEL);
-    printf("\t   DOF at each Control Point  =  %5d\n\n", ndof);
-    printf("\t   Total number of DOF        =  %5d\n\n", totalDOF);
-    printf("\n ----------------------------------------------------------------------------- \n");
-*/
+    /*
+       printf("\n Background Fluid Grid information \n");
+       printf("\n ----------------------------------------------------------------------------- \n");
+       printf("\t   Problem   Dimension        =  %5d\n\n", DIM);
+       printf("\t   Polynomial Degree          =  %5d\t%5d\t%5d\n\n", degree[0], degree[1], degree[2]);
+       printf("\t   Number of Elements         =  %5d\t%5d\t%5d\n\n", nelem[0], nelem[1], nelem[2]);
+       printf("\t   Origin of the grid         =  %12.6f\t%12.6f\t%12.6f\n\n", origin[0], origin[1], origin[2]);
+       printf("\t   Grid Length                =  %12.6f\t%12.6f\t%12.6f\n\n", gridLEN[0], gridLEN[1], gridLEN[2]);
+       printf("\t   MAXIMUM REFINEMENT LEVEL   =  %5d\n\n", MAX_LEVEL);
+       printf("\t   DOF at each Control Point  =  %5d\n\n", ndof);
+       printf("\t   Total number of DOF        =  %5d\n\n", totalDOF);
+       printf("\n ----------------------------------------------------------------------------- \n");
+       */
     return;
 }
 
@@ -660,18 +733,18 @@ void ExplicitCFD::setInitialConditions()
     //VectorXd  velTemp;
 
     /*
-    for(nn=0; nn<nNode; nn++)
-    {
-      if( midNodeData[nn][0] ) // if midnode
-      {
-        for(dd=0; dd<ndof; dd++)
-        {
-          xx = 0.25*velTemp(midNodeData[nn][1]*ndof+dd) + 0.25*velTemp(midNodeData[nn][2]*ndof+dd);
+       for(nn=0; nn<nNode; nn++)
+       {
+       if( midNodeData[nn][0] ) // if midnode
+       {
+       for(dd=0; dd<ndof; dd++)
+       {
+       xx = 0.25*velTemp(midNodeData[nn][1]*ndof+dd) + 0.25*velTemp(midNodeData[nn][2]*ndof+dd);
 
-          //SolnData.var1Dot[nn*ndof+dd] = 2.0*(velTemp(nn*ndof+dd) - xx);
-        }
-        //cout << velTemp(nn*ndof) << '\t' << SolnData.var1Dot(nn*ndof) << endl;
-      }
+    //SolnData.var1Dot[nn*ndof+dd] = 2.0*(velTemp(nn*ndof+dd) - xx);
+    }
+    //cout << velTemp(nn*ndof) << '\t' << SolnData.var1Dot(nn*ndof) << endl;
+    }
     }
     */
 
@@ -698,18 +771,18 @@ void ExplicitCFD::setInitialConditions()
 
 void ExplicitCFD::setTimeParam()
 {
-  //SolnData.setTimeParam();
+    //SolnData.setTimeParam();
 
-  return;
+    return;
 }
 
 
 
 void ExplicitCFD::updateIterStep()
 {
-  //SolnData.updateIterStep();
+    //SolnData.updateIterStep();
 
-  return;
+    return;
 }
 
 
@@ -717,7 +790,7 @@ void ExplicitCFD::updateIterStep()
 
 void ExplicitCFD::writeNodalData()
 {
-  return;
+    return;
 }
 
 
@@ -745,10 +818,13 @@ int  ExplicitCFD::solveExplicitStep()
     int  aa, bb, dd, ee, ii, jj, kk, count, row, col, ind;
 
     double  norm_velo=1.0, norm_pres=1.0;
-    double  dtCrit=1.0e10, fact, fact1, fact2;
+    double  dtCrit=1.0e10, fact2;
     double  dtgamma11, dtgamma12, norm_velo_diff, norm_pres_diff;
     double  timeNow=0.0, timeFact=0.0, dt=0.0;
     double  Re=2.0/elemData[1];
+
+    vector<double> FlocalVelo(nElem*npElemVelo*ndim);
+    vector<double> FlocalPres(nElem*npElemPres);
 
     cout << " Re = " << Re << endl;
 
@@ -758,9 +834,9 @@ int  ExplicitCFD::solveExplicitStep()
 
     int nthreads, thread_cur;
 
-    //#pragma omp parallel
-    //nthreads = omp_get_num_threads();
-    //cout << " nthreads = " << nthreads << endl;
+#pragma omp parallel
+    nthreads = omp_get_num_threads();
+    cout << " nthreads = " << nthreads << endl;
 
     double time1 = omp_get_wtime();
     //auto time1 = chrono::steady_clock::now();
@@ -768,153 +844,157 @@ int  ExplicitCFD::solveExplicitStep()
     //setInitialConditions();
     //timeFact = 1.0;
     //Time loop
+
     while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
     {
         if(stepsCompleted < 5000)
         {
-          timeFact = 0.5*(1-cos(PI*stepsCompleted/5000));
-          //timeFact = stepsCompleted/5000.0;
+            timeFact = 0.5*(1-cos(PI*stepsCompleted/5000));
+            //timeFact = stepsCompleted/5000.0;
         }
         else
         {
-          timeFact = 1.0;
+            timeFact = 1.0;
         }
         //timeFact = 1.0;
 
-          //#pragma omp sections
-          //{
-            //#pragma omp section
-            for(ii=0; ii<nsize_velo; ii++)
-            {
-              rhsVecVelo[ii]=0.0;
-            }
+#pragma omp parallel for
+        for(int iii=0; iii<nsize_velo; iii++)
+        {
+            rhsVecVelo[iii]=0.0;
+        }
 
-            //#pragma omp section
-            for(ii=0; ii<nsize_pres; ii++)
-            {
-              rhsVecPres[ii]=0.0;
-            }
-          //}
-
-        //#pragma omp parallel private(ee, ii, jj, kk, dd, fact) default(shared)
-        //{
-          //Loop over elements and compute the RHS and time step
-            double  FlocalVelo[npElem*ndof], FlocalPres[npElem*ndof];
-          dtCrit=1.0e10;
-          //#pragma acc parallel loop private(fact)  reduction(min : dtCrit) //schedule(dynamic,100) //shared(ndim, nElem, rhsVecVelo, rhsVecPres, elemConn)
-          for(int ee=0; ee<nElem; ee++)
-          {
-            fact = timeNow - dt;
+#pragma omp parallel for
+        for(int iii=0; iii<nsize_pres; iii++)
+        {
+            rhsVecPres[iii]=0.0;
+        }
+#pragma omp parallel for
+        for(int iii = 0; iii< nElem*npElemVelo*ndim; ++iii) FlocalVelo[iii] = 0;
+#pragma omp parallel for
+        for(int iii = 0; iii< nElem*npElemPres; ++iii) FlocalPres[iii] = 0;
+        //Loop over elements and compute the RHS and time step
+        dtCrit=1.0e10;
+#pragma omp parallel for reduction(min : dtCrit) default(none) shared(timeNow,dt,FlocalVelo,FlocalPres)
+        for(int iee=0; iee<nElem; iee++)
+        {
+            int presOffset = iee*npElemPres; //PRIVATE
+            int veloOffset = iee*npElemVelo*ndim; //PRIVATE
+            double fact = timeNow - dt;
             //Compute the element force vector, including residual force and time step
+            dtCrit = min(dtCrit, elems[iee].ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, &FlocalVelo[veloOffset], &FlocalPres[presOffset], fact) );
 
-            dtCrit = min(dtCrit, elems[ee].ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, FlocalVelo, FlocalPres, fact) );
+        } //LoopElem
 
-            //printVector(FlocalVelo);
-            //printVector(Flocal2);
-            int ii, jj, kk, dd;
-            //Assemble the element vector
-            //#pragma omp critical
-            //{
-              for(ii=0; ii<npElemVelo; ii++)
-              {
-                jj = ndim*ii;
-                kk = ndim*elemConn[ee][ii];
+        //Loop on velocity nodes
+#pragma omp parallel for default(shared)
+        for(int inode=0;inode < nNode_Velo;++inode)
+        {
+            // initialization
+            for(int idd=0; idd<ndim; idd++) rhsVecVelo[inode*ndim+idd] = 0;
 
-                for(dd=0; dd<ndim; dd++)
-                {
-                  //#pragma acc atomic
-                  rhsVecVelo.data()[kk+dd] += FlocalVelo[jj+dd];
-                }
-              }
-              for(ii=0; ii<npElemPres; ii++)
-              {
-                  //#pragma acc atomic
-                  rhsVecPres.data()[elemConn[ee][ii]]   += FlocalPres[ii];
-              }
-            //}
-          } //LoopElem
-        //}
+            for(int iNodeIdx=veloNodeConnEind[inode];
+                    iNodeIdx<veloNodeConnEind[inode+1];
+                    ++iNodeIdx){
+                int ijj = veloNodeConn[iNodeIdx];
+                for(int idd=0; idd<ndim; idd++) 
+                    rhsVecVelo[inode*ndim+idd] += FlocalVelo[ijj*ndim+idd];
+            }
+        } //Loop on velocity nodes
+        //Loop on pressure nodes
+#pragma omp parallel for default(shared)
+        for(int inode=0;inode < nNode_Pres;++inode)
+        {
+            // initialization
+            rhsVecPres[inode] = 0;
 
-        //cout << dtCrit << endl;
+            for(int iNodeIdx=presNodeConnEind[inode];
+                    iNodeIdx<presNodeConnEind[inode+1];
+                    ++iNodeIdx){
 
-          dt = dtCrit*CFL/gamm1;
+                int iii = presNodeConn[iNodeIdx];
+                rhsVecPres[inode]   += FlocalPres[iii];
 
-          // Add specified nodal force 
-          //addExternalForces(timeFact);
+            }
+        } //Loop on pressure nodes
 
-          // compute the solution at t_{n+1}
-          dtgamma11 = dt*gamm1;
-          dtgamma12 = dt*(1.0-gamm1);
+        dt = dtCrit*CFL/gamm1;
 
-          //#pragma omp for
-          for(ii=0; ii<totalDOF_Velo; ii++)
-          {
-            jj = assyForSolnVelo[ii];
+        // Add specified nodal force 
+        //addExternalForces(timeFact);
 
-            veloDot[jj] = rhsVecVelo[jj]/globalMassVelo[jj];
-            velo[jj]    = veloPrev[jj] + dtgamma11*veloDot[jj] + dtgamma12*veloDotPrev[jj];
-          }
+        // compute the solution at t_{n+1}
+        dtgamma11 = dt*gamm1;
+        dtgamma12 = dt*(1.0-gamm1);
 
-          //#pragma omp for
-          for(ii=0; ii<totalDOF_Pres; ii++)
-          {
-            jj = assyForSolnPres[ii];
+#pragma omp parallel for default(shared)
+        for(int iii=0; iii<totalDOF_Velo; iii++)
+        {
+            int ijj = assyForSolnVelo[iii];
 
-            presDot[jj] = rhsVecPres[jj]/globalMassPres[jj];
-            pres[jj]    = presPrev[jj] + dtgamma11*presDot[jj] + dtgamma12*presDotPrev[jj];
-          }
+            veloDot[ijj] = rhsVecVelo[ijj]/globalMassVelo[ijj];
+            velo[ijj]    = veloPrev[ijj] + dtgamma11*veloDot[ijj] + dtgamma12*veloDotPrev[ijj];
+        }
 
-          //#pragma omp single
-          applyBoundaryConditions(timeFact);
-          //printVector(velo);
+#pragma omp parallel for default(shared)
+        for(int iii=0; iii<totalDOF_Pres; iii++)
+        {
+            int ijj = assyForSolnPres[iii];
 
-          // compute the norms and store the variables
-          norm_velo = 0.0;
-          norm_velo_diff = 0.0;
-          //#pragma omp for reduction(+:norm_velo,norm_velo_diff)
-          for(ii=0; ii<nsize_velo; ii++)
-          {
-            norm_velo += velo[ii]*velo[ii];
+            presDot[ijj] = rhsVecPres[ijj]/globalMassPres[ijj];
+            pres[ijj]    = presPrev[ijj] + dtgamma11*presDot[ijj] + dtgamma12*presDotPrev[ijj];
+        }
 
-            fact1 = velo[ii]-veloPrev[ii];
+        applyBoundaryConditions(timeFact);
+        //printVector(velo);
+
+        // compute the norms and store the variables
+        norm_velo = 0.0;
+        norm_velo_diff = 0.0;
+#pragma omp parallel for reduction(+:norm_velo,norm_velo_diff) default(shared)
+        for(int iii=0; iii<nsize_velo; iii++)
+        {
+            norm_velo += velo[iii]*velo[iii];
+
+            double fact1 = velo[iii]-veloPrev[iii];
             norm_velo_diff += fact1*fact1;
 
             // store the variables
             //veloPrev3  = veloPrev2;
             //veloPrev2  = veloPrev;
-            veloPrev[ii]  = velo[ii];
-            veloDotPrev[ii]  = veloDot[ii];
-          }
+            veloPrev[iii]  = velo[iii];
+            veloDotPrev[iii]  = veloDot[iii];
+        }
 
-          norm_pres = 0.0;
-          norm_pres_diff = 0.0;
-          //#pragma omp for reduction(+:norm_pres, norm_pres_diff)
-          for(ii=0; ii<nsize_pres; ii++)
-          {
-            norm_pres += pres[ii]*pres[ii];
+        norm_pres = 0.0;
+        norm_pres_diff = 0.0;
+#pragma omp parallel for reduction(+:norm_pres, norm_pres_diff) default(shared)
+        for(int iii=0; iii<nsize_pres; iii++)
+        {
+            norm_pres += pres[iii]*pres[iii];
 
-            fact1 = pres[ii]-presPrev[ii];
+            double fact1 = pres[iii]-presPrev[iii];
             norm_pres_diff += fact1*fact1;
 
             //presPrev3  = presPrev2;
             //presPrev2  = presPrev;
-            presPrev[ii]     = pres[ii];
-            presDotPrev[ii]  = presDot[ii];
-          }
+            presPrev[iii]     = pres[iii];
+            presDotPrev[iii]  = presDot[iii];
+        }
 
         if( std::isnan(norm_velo) || std::isnan(norm_pres) )
         {
-          cerr << " NAN encountered in the solution ... " << endl;
-          cerr << " Program has been terminated ... " << endl;
-          exit(-1);
+            cerr << " NAN encountered in the solution ... " << endl;
+            cerr << " Program has been terminated ... " << endl;
+            exit(-1);
         }
 
         norm_velo = sqrt(norm_velo_diff/norm_velo);
         norm_pres = sqrt(norm_pres_diff/norm_pres);
         if(stepsCompleted == 0)
         {
-          norm_velo = 1.0;
-          norm_pres = 1.0;
+            norm_velo = 1.0;
+            norm_pres = 1.0;
         }
 
         if( (stepsCompleted%outputFreq == 0) || (norm_velo < conv_tol) )
@@ -925,21 +1005,21 @@ int  ExplicitCFD::solveExplicitStep()
             //postProcess();
 
             /*
-            setZero(TotalForce);
-            for(ii=0; ii<outputEdges.size(); ii++)
-            {
-              elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);
-            }
+               setZero(TotalForce);
+               for(ii=0; ii<outputEdges.size(); ii++)
+               {
+               elems[outputEdges[ii][0]]->CalculateForces(outputEdges[ii][1], node_coords, elemData, timeData, velo, pres, TotalForce);
+               }
 
-            fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
-            fout_convdata << '\t' << TotalForce[0] << '\t' << TotalForce[1] << '\t' << TotalForce[2] << endl;
-            */
+               fout_convdata << timeNow << '\t' << stepsCompleted << '\t' << norm_velo << '\t' << norm_pres ;
+               fout_convdata << '\t' << TotalForce[0] << '\t' << TotalForce[1] << '\t' << TotalForce[2] << endl;
+               */
         }
 
         if(norm_velo < conv_tol)
         {
-          cout << " Solution convdataged below the specified tolerance " << endl;
-          break;
+            cout << " Solution convdataged below the specified tolerance " << endl;
+            break;
         }
 
         stepsCompleted = stepsCompleted + 1;

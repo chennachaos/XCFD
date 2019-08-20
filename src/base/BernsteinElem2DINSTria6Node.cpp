@@ -170,9 +170,6 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
     //KimMoinFlow  analy(rho, mu, 0.0);
 
     //loop over Gauss points and compute element residual
-    for(ii=0;ii<nsize;ii++) FlocalVelo[ii]=0.0;
-    for(ii=0;ii<3;ii++) FlocalPres[ii]=0.0;
-
     force[0] = 0.0;    force[1] = 0.0;
 
     for(gp=0; gp<nGP; gp++)

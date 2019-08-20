@@ -52,6 +52,11 @@ inline void setZero(VectorXd& AA)
 
 
 
+inline void setZero(double* AA, int size){
+
+    for(int i = 0; i< size; ++i) AA[i] = 0;
+
+}
 
 inline void printVector(VectorXd& AA)
 {

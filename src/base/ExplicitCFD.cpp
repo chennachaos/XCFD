@@ -845,6 +845,8 @@ int  ExplicitCFD::solveExplicitStep()
     //timeFact = 1.0;
     //Time loop
 
+#pragma acc data copyin(this)
+    {
     while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
     {
         {
@@ -864,28 +866,29 @@ int  ExplicitCFD::solveExplicitStep()
 
 
 #pragma omp parallel for
-#pragma acc parallel loop
+#pragma acc parallel loop async(1)
         for(int iii=0; iii<nsize_velo; iii++)
         {
             rhsVecVelo[iii]=0.0;
         }
 
 #pragma omp parallel for
-#pragma acc parallel loop
+#pragma acc parallel loop async(2)
         for(int iii=0; iii<nsize_pres; iii++)
         {
             rhsVecPres[iii]=0.0;
         }
 #pragma omp parallel for
-#pragma acc parallel loop
+#pragma acc parallel loop async(3)
         for(int iii = 0; iii< nElem*npElemVelo*ndim; ++iii) FlocalVelo[iii] = 0;
 #pragma omp parallel for
-#pragma acc parallel loop
+#pragma acc parallel loop async(4)
         for(int iii = 0; iii< nElem*npElemPres; ++iii) FlocalPres[iii] = 0;
 
         //Loop over elements and compute the RHS and time step
+#pragma acc wait(3, 4)
 #pragma omp parallel for
-#pragma acc parallel loop reduction(min : dtCrit) //default(none) shared(timeNow,dt,FlocalVelo,FlocalPres)
+#pragma acc parallel loop independent reduction(min : dtCrit) async(5)
         for(int iee=0; iee<nElem; iee++)
         {
             int presOffset = iee*npElemPres; //PRIVATE
@@ -897,8 +900,9 @@ int  ExplicitCFD::solveExplicitStep()
         } //LoopElem
 
         //Loop on velocity nodes
+#pragma acc wait(5)
 #pragma omp parallel for
-#pragma acc parallel loop 
+#pragma acc parallel loop async(1)
         for(int inode=0;inode < nNode_Velo;++inode)
         {
             // initialization
@@ -914,7 +918,7 @@ int  ExplicitCFD::solveExplicitStep()
         } //Loop on velocity nodes
         //Loop on pressure nodes
 #pragma omp parallel for
-#pragma acc parallel loop 
+#pragma acc parallel loop async(2)
         for(int inode=0;inode < nNode_Pres;++inode)
         {
             // initialization
@@ -940,7 +944,7 @@ int  ExplicitCFD::solveExplicitStep()
         double dtgamma12 = dt*(1.0-gamm1);
 
 #pragma omp parallel for
-#pragma acc parallel loop 
+#pragma acc parallel loop async(1)
         for(int iii=0; iii<totalDOF_Velo; iii++)
         {
             int ijj = assyForSolnVelo[iii];
@@ -950,7 +954,7 @@ int  ExplicitCFD::solveExplicitStep()
         }
 
 #pragma omp parallel for
-#pragma acc parallel loop
+#pragma acc parallel loop async(2)
         for(int iii=0; iii<totalDOF_Pres; iii++)
         {
             int ijj = assyForSolnPres[iii];
@@ -969,7 +973,7 @@ int  ExplicitCFD::solveExplicitStep()
 
         // compute the norms and store the variables
 #pragma omp parallel for reduction(+:norm_velo,norm_velo_diff)
-#pragma acc parallel loop reduction(+:norm_velo,norm_velo_diff)
+#pragma acc parallel loop reduction(+:norm_velo,norm_velo_diff) async(1)
         for(int iii=0; iii<nsize_velo; iii++)
         {
             norm_velo += velo[iii]*velo[iii];
@@ -985,7 +989,7 @@ int  ExplicitCFD::solveExplicitStep()
         }
 
 #pragma omp parallel for reduction(+:norm_pres, norm_pres_diff)
-#pragma acc parallel loop reduction(+:norm_pres, norm_pres_diff)
+#pragma acc parallel loop reduction(+:norm_pres, norm_pres_diff) async(2)
         for(int iii=0; iii<nsize_pres; iii++)
         {
             norm_pres += pres[iii]*pres[iii];
@@ -998,6 +1002,7 @@ int  ExplicitCFD::solveExplicitStep()
             presPrev[iii]     = pres[iii];
             presDotPrev[iii]  = presDot[iii];
         }
+#pragma acc wait(1, 2)
 
 
 
@@ -1052,6 +1057,7 @@ int  ExplicitCFD::solveExplicitStep()
             timeNow = timeNow + dt;
         }
     } //Time loop
+}
 
     //postProcess();
 

@@ -866,19 +866,6 @@ int  ExplicitCFD::solveExplicitStep()
 
 
 #pragma omp parallel for
-#pragma acc parallel loop async(1)
-        for(int iii=0; iii<nsize_velo; iii++)
-        {
-            rhsVecVelo[iii]=0.0;
-        }
-
-#pragma omp parallel for
-#pragma acc parallel loop async(2)
-        for(int iii=0; iii<nsize_pres; iii++)
-        {
-            rhsVecPres[iii]=0.0;
-        }
-#pragma omp parallel for
 #pragma acc parallel loop async(3)
         for(int iii = 0; iii< nElem*npElemVelo*ndim; ++iii) FlocalVelo[iii] = 0;
 #pragma omp parallel for
@@ -898,6 +885,7 @@ int  ExplicitCFD::solveExplicitStep()
             dtCrit = min(dtCrit, elems[iee].ResidualIncNavStokesAlgo1(node_coords, elemData, timeData, velo, veloPrev, veloDot, veloDotPrev, pres, presPrev, &FlocalVelo[veloOffset], &FlocalPres[presOffset], fact) );
 
         } //LoopElem
+
 
         //Loop on velocity nodes
 #pragma acc wait(5)

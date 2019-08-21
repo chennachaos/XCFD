@@ -230,6 +230,7 @@ void ExplicitCFD::applyBoundaryConditions(double timeFact)
     int ii, jj, n1, n2;
     double  fact1 = 1.0/(gamm1*dt), fact2 = (gamm1-1.0)/gamm1;
 
+#pragma acc parallel loop   
     for(ii=0; ii<nDBC_Velo; ++ii)
     {
         n1 = DirichletBCsVelo[ii][0];
@@ -241,6 +242,7 @@ void ExplicitCFD::applyBoundaryConditions(double timeFact)
         veloDot[jj] = fact1 * (velo[jj]-veloPrev[jj]) + fact2 * veloDotPrev[jj];
     }
 
+#pragma acc parallel loop   
     for(ii=0; ii<nDBC_Pres; ++ii)
     {
         jj = DirichletBCsPres[ii][0];

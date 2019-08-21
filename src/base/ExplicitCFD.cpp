@@ -889,7 +889,7 @@ int  ExplicitCFD::solveExplicitStep()
 
         //Loop over elements and compute the RHS and time step
 #pragma omp parallel for
-#pragma acc parallel loop reduction(min : dtCrit) //default(none) shared(timeNow,dt,FlocalVelo,FlocalPres)
+#pragma acc parallel loop independent reduction(min : dtCrit) //default(none) shared(timeNow,dt,FlocalVelo,FlocalPres)
         for(int iee=0; iee<nElem; iee++)
         {
             int presOffset = iee*npElemPres; //PRIVATE

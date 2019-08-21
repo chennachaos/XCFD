@@ -845,12 +845,8 @@ int  ExplicitCFD::solveExplicitStep()
     //timeFact = 1.0;
     //Time loop
 
-#pragma omp parallel  
-#pragma acc parallel
     while( (stepsCompleted < stepsMax ) && (timeNow < timeFinal) )
     {
-#pragma omp single
-#pragma acc num_gangs(1) num_workers(1) vector_length(1)
         {
             if(stepsCompleted < 5000)
             {
@@ -862,38 +858,34 @@ int  ExplicitCFD::solveExplicitStep()
                 timeFact = 1.0;
             }
             //timeFact = 1.0;
-            norm_velo = 0.0;
-            norm_velo_diff = 0.0;
-            norm_pres = 0.0;
-            norm_pres_diff = 0.0;
 
             dtCrit=1.0e10;
         }
 
 
-#pragma omp for
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop
         for(int iii=0; iii<nsize_velo; iii++)
         {
             rhsVecVelo[iii]=0.0;
         }
 
-#pragma omp for
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop
         for(int iii=0; iii<nsize_pres; iii++)
         {
             rhsVecPres[iii]=0.0;
         }
-#pragma omp for
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop
         for(int iii = 0; iii< nElem*npElemVelo*ndim; ++iii) FlocalVelo[iii] = 0;
-#pragma omp for
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop
         for(int iii = 0; iii< nElem*npElemPres; ++iii) FlocalPres[iii] = 0;
 
         //Loop over elements and compute the RHS and time step
-#pragma omp for reduction(min : dtCrit) //default(none) shared(timeNow,dt,FlocalVelo,FlocalPres)
-#pragma acc for reduction(min : dtCrit)
+#pragma omp parallel for
+#pragma acc parallel loop reduction(min : dtCrit) //default(none) shared(timeNow,dt,FlocalVelo,FlocalPres)
         for(int iee=0; iee<nElem; iee++)
         {
             int presOffset = iee*npElemPres; //PRIVATE
@@ -905,8 +897,8 @@ int  ExplicitCFD::solveExplicitStep()
         } //LoopElem
 
         //Loop on velocity nodes
-#pragma omp for 
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop 
         for(int inode=0;inode < nNode_Velo;++inode)
         {
             // initialization
@@ -921,8 +913,8 @@ int  ExplicitCFD::solveExplicitStep()
             }
         } //Loop on velocity nodes
         //Loop on pressure nodes
-#pragma omp for 
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop 
         for(int inode=0;inode < nNode_Pres;++inode)
         {
             // initialization
@@ -938,8 +930,6 @@ int  ExplicitCFD::solveExplicitStep()
             }
         } //Loop on pressure nodes
 
-#pragma omp single
-#pragma acc serial
         dt = dtCrit*CFL/gamm1;
 
         // Add specified nodal force 
@@ -949,8 +939,8 @@ int  ExplicitCFD::solveExplicitStep()
         double dtgamma11 = dt*gamm1;
         double dtgamma12 = dt*(1.0-gamm1);
 
-#pragma omp for 
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop 
         for(int iii=0; iii<totalDOF_Velo; iii++)
         {
             int ijj = assyForSolnVelo[iii];
@@ -959,8 +949,8 @@ int  ExplicitCFD::solveExplicitStep()
             velo[ijj]    = veloPrev[ijj] + dtgamma11*veloDot[ijj] + dtgamma12*veloDotPrev[ijj];
         }
 
-#pragma omp for
-#pragma acc for
+#pragma omp parallel for
+#pragma acc parallel loop
         for(int iii=0; iii<totalDOF_Pres; iii++)
         {
             int ijj = assyForSolnPres[iii];
@@ -969,15 +959,17 @@ int  ExplicitCFD::solveExplicitStep()
             pres[ijj]    = presPrev[ijj] + dtgamma11*presDot[ijj] + dtgamma12*presDotPrev[ijj];
         }
 
-#pragma omp single
-#pragma acc serial
         applyBoundaryConditions(timeFact);
         //printVector(velo);
 
+            norm_velo = 0.0;
+            norm_velo_diff = 0.0;
+            norm_pres = 0.0;
+            norm_pres_diff = 0.0;
 
         // compute the norms and store the variables
-#pragma omp for reduction(+:norm_velo,norm_velo_diff)
-#pragma acc for reduction(+:norm_velo,norm_velo_diff)
+#pragma omp parallel for reduction(+:norm_velo,norm_velo_diff)
+#pragma acc parallel loop reduction(+:norm_velo,norm_velo_diff)
         for(int iii=0; iii<nsize_velo; iii++)
         {
             norm_velo += velo[iii]*velo[iii];
@@ -992,8 +984,8 @@ int  ExplicitCFD::solveExplicitStep()
             veloDotPrev[iii]  = veloDot[iii];
         }
 
-#pragma omp for reduction(+:norm_pres, norm_pres_diff)
-#pragma acc for reduction(+:norm_pres, norm_pres_diff)
+#pragma omp parallel for reduction(+:norm_pres, norm_pres_diff)
+#pragma acc parallel loop reduction(+:norm_pres, norm_pres_diff)
         for(int iii=0; iii<nsize_pres; iii++)
         {
             norm_pres += pres[iii]*pres[iii];
@@ -1009,8 +1001,6 @@ int  ExplicitCFD::solveExplicitStep()
 
 
 
-#pragma omp single
-#pragma acc serial
         {
             if( std::isnan(norm_velo) || std::isnan(norm_pres) )
             {
@@ -1049,15 +1039,11 @@ int  ExplicitCFD::solveExplicitStep()
 
         if(norm_velo < conv_tol)
         {
-#pragma omp single
-#pragma acc serial
             cout << " Solution convdataged below the specified tolerance " << endl;
             break;
         }
 
 
-#pragma omp single
-#pragma acc serial
         {
 
 
@@ -1067,7 +1053,7 @@ int  ExplicitCFD::solveExplicitStep()
         }
     } //Time loop
 
-    postProcess();
+    //postProcess();
 
     //auto tend = chrono::steady_clock::now();
     double tend = omp_get_wtime();

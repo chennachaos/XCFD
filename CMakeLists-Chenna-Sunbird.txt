@@ -15,7 +15,7 @@ set(CMAKE_CXX_COMPILER "/apps/compilers/pgi/19.4/linux86-64-llvm/19.4/bin/pgc++"
 
 #set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -mp")
 #set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -mp -ta=multicore -Minfo=mp -v")
-set(COPT "-w -std=c++11 -fast -DVTK_LEGACY_FORMAT -ta=multicore -Minfo=accel")
+set(COPT "-w -std=c++11 -acc -fast -DVTK_LEGACY_FORMAT -ta=tesla:managed -Minfo=accel")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
 

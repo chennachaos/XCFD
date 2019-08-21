@@ -143,13 +143,11 @@ void BernsteinElem2DINSTria6Node::prepareElemData(const vector<vector<double> >&
 
 double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, double* FlocalVelo, double* FlocalPres, double timeCur)
 {
-    double  b1, b2, b3, b4, Da;
-    double  velo[2], veloPrev[2], Du[2], dp[2], resi[2], rStab[2], gradTvel[2], pres;
-    double  force[2], veloDot[2], divVelo;
-    double  xx, yy, fact, fact2;
+    double  b1, b2, b4;
+    double  velo[2], dp[2], resi[2], pres, veloDot[2], fact;
     double  grad[2][2], stress[2][2];
 
-    int  gp, ii, jj, TI, TIp1;
+    int ii, TI, TIp1;
 
     // material parameters
     double  rho = elemData[0];
@@ -158,32 +156,20 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
     double  bforce[2] = {elemData[2],  elemData[3]};
     double  beta0  = elemData[5];
     double  betaSq = beta0*beta0;
-    double  v_conv=-1.0, dtCric=1.0e10;
-    double  beta=-1.0;
-    double  v_diff = mu/rho/charlen;
+    double  v_conv=-1.0;
+    //double  beta=-1.0;
+    //double  v_diff = mu/rho/charlen;
     double  dtCric_visco = charlen*charlen*rho/mu/2.0;
 
-    // time integration parameters
-    //double  af   = timeData[1];
-    //double  timefact = timeData[2];
-
-    //KimMoinFlow  analy(rho, mu, 0.0);
-
     //loop over Gauss points and compute element residual
-    force[0] = 0.0;    force[1] = 0.0;
-
-    for(gp=0; gp<nGP; gp++)
+    for(int gp=0; gp<nGP; gp++)
     {
           // compute the gradient of velocity
-          xx = 0.0; yy = 0.0;
           velo[0] = velo[1] = 0.0;
           grad[0][0] = grad[0][1] = 0.0;
           grad[1][0] = grad[1][1] = 0.0;
           for(ii=0; ii<6; ii++)
           {
-            //xx += xNode[ii]*N[ii];
-            //yy += yNode[ii]*N[ii];
-
             TI   = nodeNums[ii]*2;
             TIp1 = TI+1;
 
@@ -210,38 +196,13 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
             dp[1] += b1*dNpdy[gp][ii];
           }
 
-          //fact = 2.0*mu*(grad[0][0]+grad[1][1])/3.0;
-          //stress[0][0] = mu*(grad[0][0]+grad[0][0]) - fact - pres;
-          //stress[0][1] = mu*(grad[0][1]+grad[1][0]);
-          //stress[1][0] = stress[0][1];
-          //stress[1][1] = mu*(grad[1][1]+grad[1][1]) - fact - pres;
-
           stress[0][0] = mu*grad[0][0] - pres;
           stress[0][1] = mu*grad[0][1];
           stress[1][0] = mu*grad[1][0];
           stress[1][1] = mu*grad[1][1] - pres;
 
-          //stress = mu*grad;
-          //stress[0][0] -= pres;
-          //stress[1][1] -= pres;
-
-          //cout << stress[0][0] << '\t' << stress[0][1] << '\t' << stress[1][0] << '\t' << stress[1][1] << endl;
-
-          //force[0] = 0.0;
-          //force[1] = 0.0;
-          //force[0] = analy.computeForce(0, xx, yy, timeCur);
-          //force[1] = analy.computeForce(1, xx, yy, timeCur);
-
-          gradTvel[0] = velo[0]*grad[0][0] + velo[1]*grad[0][1];
-          gradTvel[1] = velo[0]*grad[1][0] + velo[1]*grad[1][1];
-
-          divVelo = grad[0][0]+grad[1][1];
-
-          //gradTvel[0] = velo[0]*grad[0][0] + velo[1]*grad[0][1] + velo[0]*divVelo;
-          //gradTvel[1] = velo[0]*grad[1][0] + velo[1]*grad[1][1] + velo[1]*divVelo;
-
-          resi[0] = rho*(force[0] - gradTvel[0]) ;
-          resi[1] = rho*(force[1] - gradTvel[1]) ;
+          resi[0] = rho*(bforce[0] - velo[0]*grad[0][0] - velo[1]*grad[0][1]) ;
+          resi[1] = rho*(bforce[1] - velo[0]*grad[1][0] - velo[1]*grad[1][1]) ;
 
           for(ii=0; ii<6; ii++)
           {
@@ -256,33 +217,19 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
             FlocalVelo[TIp1] += (b4*resi[1] - b1*stress[1][0] - b2*stress[1][1]);
           }
 
-          //v_conv = sqrt(veloPrev[0]*veloPrev[0]+veloPrev[1]*veloPrev[1]);
-          //v_conv = sqrt(velo[0]*velo[0]+velo[1]*velo[1]);
-
           v_conv = max(v_conv, velo[0]*velo[0]+velo[1]*velo[1]);
 
-          //beta = max(beta0, max(v_conv, v_diff));
-          //beta = max(beta0, v_conv);
-          //beta = beta0;
-          //beta2 = beta*beta;
-
-          fact = -elemVolGP[gp]*betaSq*divVelo;
+          fact = -elemVolGP[gp]*betaSq*(grad[0][0]+grad[1][1]);
 
           for(ii=0; ii<3; ii++)
           {
             FlocalPres[ii] += Np[gp][ii]*fact;
           }
-
-          //dtCric = min(dtCric, charlen/(v_conv+sqrt(v_conv*v_conv+beta*beta)));
-          //dtCric = min(dtCric, charlen/(v_conv+beta));
     }
 
-    dtCric = charlen/(sqrt(v_conv)+sqrt(v_conv+betaSq));
-
-    //cout <<  dtCric << '\t' << dtCric_visco << '\t' << dtCric_pres << endl;
+    double dtCric = charlen/(sqrt(v_conv)+sqrt(v_conv+betaSq));
 
     return  min(dtCric, dtCric_visco);
-    //return  dtCric;
 }
 
 

@@ -61,37 +61,6 @@ void BernsteinElem2DINSTria6Node::prepareElemData(const vector<vector<double> >&
     gpts1[1] = 4.0/6.0;        gpts2[1] = 1.0/6.0;        gwts[1] = 1.0/6.0;
     gpts1[2] = 1.0/6.0;        gpts2[2] = 4.0/6.0;        gwts[2] = 1.0/6.0;
 
-    Nv.resize(nGP);
-    dNvdx.resize(nGP);
-    dNvdy.resize(nGP);
-
-    Np.resize(nGP);
-    dNpdx.resize(nGP);
-    dNpdy.resize(nGP);
-
-    for(int ii=0; ii<nGP; ii++)
-    {
-      Nv[ii].resize(nlbf);
-      dNvdx[ii].resize(nlbf);
-      dNvdy[ii].resize(nlbf);
-
-      Np[ii].resize(nlbf);
-      dNpdx[ii].resize(nlbf);
-      dNpdy[ii].resize(nlbf);
-
-      setZero(Nv[ii]);
-      setZero(dNvdx[ii]);
-      setZero(dNvdy[ii]);
-
-      setZero(Np[ii]);
-      setZero(dNpdx[ii]);
-      setZero(dNpdy[ii]);
-    }
-
-    //printVector(nodeNums);
-
-    elemVolGP.resize(nGP);
-
     elemVol=0.0;
     for(gp=0; gp<nGP; gp++)
     {
@@ -113,9 +82,9 @@ void BernsteinElem2DINSTria6Node::prepareElemData(const vector<vector<double> >&
 
       elemVol += dvol;
 
-      //Np[gp][0] = 1.0-param[0]-param[1];  Np[gp][1] = param[0];  Np[gp][2] = param[1];
+      Np[gp][0] = 1.0-param[0]-param[1];  Np[gp][1] = param[0];  Np[gp][2] = param[1];
 
-      computeBasisFunctions2D(false, ELEM_TYPE, 1, param, xNode, yNode, &Np[gp][0], &dNpdx[gp][0], &dNpdy[gp][0], Jac);
+      //computeBasisFunctions2D(false, ELEM_TYPE, 1, param, xNode, yNode, &Np[gp][0], &dNpdx[gp][0], &dNpdy[gp][0], Jac);
     }//gp
 
     //charlen = sqrt(4.0*elemVol/PI);
@@ -141,10 +110,10 @@ void BernsteinElem2DINSTria6Node::prepareElemData(const vector<vector<double> >&
 
 
 
-double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, double* FlocalVelo, double* FlocalPres, double timeCur)
+double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, double* FlocalVelo, double* FlocalPres, double timeCur) const
 {
     double  b1, b2, b4;
-    double  velo[2], dp[2], resi[2], pres, veloDot[2], fact;
+    double  velo[2], resi[2], pres, veloDot[2], fact;
     double  grad[2][2], stress[2][2];
 
     int ii, TI, TIp1;
@@ -153,9 +122,6 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
     double  rho = elemData[0];
     double  mu  = elemData[1];
 
-    double  bforce[2] = {elemData[2],  elemData[3]};
-    double  beta0  = elemData[5];
-    double  betaSq = beta0*beta0;
     double  v_conv=-1.0;
     //double  beta=-1.0;
     //double  v_diff = mu/rho/charlen;
@@ -185,24 +151,15 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
             grad[1][1] += b2*dNvdy[gp][ii];
           }
 
-          pres = 0.0;
-          dp[0] = dp[1] = 0.0;
-          for(ii=0; ii<3; ii++)
-          {
-            b1 = presVec[nodeNums[ii]];
-
-            pres  += b1*Np[gp][ii];
-            dp[0] += b1*dNpdx[gp][ii];
-            dp[1] += b1*dNpdy[gp][ii];
-          }
+          pres = presVec[nodeNums[0]]*Np[gp][0] + presVec[nodeNums[1]]*Np[gp][1] + presVec[nodeNums[2]]*Np[gp][2];
 
           stress[0][0] = mu*grad[0][0] - pres;
           stress[0][1] = mu*grad[0][1];
           stress[1][0] = mu*grad[1][0];
           stress[1][1] = mu*grad[1][1] - pres;
 
-          resi[0] = rho*(bforce[0] - velo[0]*grad[0][0] - velo[1]*grad[0][1]) ;
-          resi[1] = rho*(bforce[1] - velo[0]*grad[1][0] - velo[1]*grad[1][1]) ;
+          resi[0] = rho*(elemData[2] - velo[0]*grad[0][0] - velo[1]*grad[0][1]) ;
+          resi[1] = rho*(elemData[3] - velo[0]*grad[1][0] - velo[1]*grad[1][1]) ;
 
           for(ii=0; ii<6; ii++)
           {
@@ -219,7 +176,7 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
 
           v_conv = max(v_conv, velo[0]*velo[0]+velo[1]*velo[1]);
 
-          fact = -elemVolGP[gp]*betaSq*(grad[0][0]+grad[1][1]);
+          fact = -elemVolGP[gp]*elemData[5]*elemData[5]*(grad[0][0]+grad[1][1]);
 
           for(ii=0; ii<3; ii++)
           {
@@ -227,7 +184,7 @@ double  BernsteinElem2DINSTria6Node::ResidualIncNavStokesAlgo1(const vector<vect
           }
     }
 
-    double dtCric = charlen/(sqrt(v_conv)+sqrt(v_conv+betaSq));
+    double dtCric = charlen/(sqrt(v_conv)+sqrt(v_conv+elemData[5]*elemData[5]));
 
     return  min(dtCric, dtCric_visco);
 }

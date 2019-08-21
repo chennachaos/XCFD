@@ -19,9 +19,8 @@ class  BernsteinElem2DINSTria6Node
 
     vector<int>  nodeNums, forAssyVec;
 
-    vector<double>  elemVolGP;
-
-    vector<VectorXd >  Nv, dNvdx, dNvdy, dNvdz, Np, dNpdx, dNpdy, dNpdz;
+    double  elemVolGP[3];
+    double  Nv[3][6], dNvdx[3][6], dNvdy[3][6], Np[3][3];
 
 
     //member functions
@@ -69,7 +68,7 @@ class  BernsteinElem2DINSTria6Node
     int MassMatrices(const vector<vector<double> >& node_coods, const double* elemData, VectorXd&  Mlocal1, VectorXd&  Mlocal2);
 
 #pragma acc routine seq
-    double  ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, double* FlocalVelo, double* FlocalPres, double timeCur);
+    double  ResidualIncNavStokesAlgo1(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloVec, const VectorXd& veloVecPrev, const VectorXd& veloDotVec, const VectorXd& veloDotVecPrev, const VectorXd& presVec, const VectorXd& presVecPrev, double* FlocalVelo, double* FlocalPres, double timeCur) const;
 
     int  ResidualIncNavStokesAlgo2(const vector<vector<double> >& node_coods, const double* elemData, const double* timeData, const VectorXd& veloCur, const VectorXd& veloDotCur, const VectorXd& presCur, VectorXd&  Flocal2);
 
